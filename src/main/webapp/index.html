@@ -1,0 +1,2649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DisasterMIS — Smart Response System</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --red: #E8291C; --red-dim: #7A1510; --red-glow: rgba(232,41,28,0.15);
+  --orange: #F57C2B; --orange-dim: #7A3E15;
+  --yellow: #F5C518; --green: #1CB85A; --green-dim: #0E5C2D;
+  --blue: #1C7BE8; --blue-dim: #0E3E74; --cyan: #18C8D4;
+  --purple: #9B59E8;
+  --bg: #080A0D; --bg2: #0E1218; --bg3: #141920; --bg4: #1A2030;
+  --border: #252D3A; --border2: #1A2030;
+  --text: #DCE4EF; --text2: #7A8FA8; --text3: #3A4A5C;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:13px;scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+button{cursor:pointer;font-family:'DM Sans',sans-serif}
+input,select,textarea{font-family:'DM Sans',sans-serif}
+
+/* ── UTILITIES ── */
+.hidden{display:none!important}
+.mono{font-family:'JetBrains Mono',monospace}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.tag-red{background:var(--red-dim);color:#FF8077}
+.tag-orange{background:var(--orange-dim);color:#FFAA77}
+.tag-green{background:var(--green-dim);color:#55EE8A}
+.tag-blue{background:var(--blue-dim);color:#77AAFF}
+.tag-gray{background:var(--bg4);color:var(--text2)}
+.tag-yellow{background:#3A3200;color:#FFD740}
+.tag-purple{background:#2D1A5C;color:#CC99FF}
+
+/* ══════════════════════════════════════
+   LOGIN
+══════════════════════════════════════ */
+#login-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%, rgba(232,41,28,0.12) 0%, transparent 70%), var(--bg);
+  position:relative;overflow:hidden;
+}
+#login-screen::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231A2030' fill-opacity='0.6'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity:.4;
+}
+.login-box{
+  position:relative;width:420px;padding:48px 40px;
+  background:var(--bg2);border:1px solid var(--border);
+  box-shadow:0 0 80px rgba(232,41,28,0.08),0 32px 64px rgba(0,0,0,0.6);
+}
+.login-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:36px}
+.login-logo-icon{
+  width:44px;height:44px;background:var(--red);display:flex;align-items:center;justify-content:center;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+}
+.login-logo-icon svg{width:22px;height:22px;fill:white}
+.login-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--text)}
+.login-subtitle{font-size:11px;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.login-label{display:block;font-size:11px;font-weight:600;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.login-input{
+  width:100%;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  font-size:13px;outline:none;transition:border-color .2s;margin-bottom:20px;
+}
+.login-input:focus{border-color:var(--red)}
+.login-select{
+  width:100%;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  font-size:13px;outline:none;appearance:none;margin-bottom:28px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A8FA8' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 16px center;
+}
+.login-select:focus{border-color:var(--red);outline:none}
+.login-btn{
+  width:100%;padding:14px;background:var(--red);border:none;color:white;
+  font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.login-btn:hover{background:#FF3322;box-shadow:0 0 24px rgba(232,41,28,0.4)}
+.login-btn:active{transform:scale(.99)}
+.login-hint{margin-top:20px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-left:3px solid var(--red)}
+.login-hint p{font-size:11px;color:var(--text2);line-height:1.8}
+.login-hint span{color:var(--text);font-weight:600}
+
+/* ══════════════════════════════════════
+   APP SHELL
+══════════════════════════════════════ */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.visible{display:flex}
+
+/* ── TOPBAR ── */
+.topbar{
+  height:52px;background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:16px;position:sticky;top:0;z-index:100;
+  flex-shrink:0;
+}
+.topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--red);white-space:nowrap}
+.topbar-sep{width:1px;height:24px;background:var(--border)}
+.topbar-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.topbar-alert-btn{
+  position:relative;width:36px;height:36px;background:var(--bg3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .2s;
+}
+.topbar-alert-btn:hover{border-color:var(--yellow);color:var(--yellow)}
+.alert-badge{
+  position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:var(--red);
+  border-radius:50%;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;color:white;
+}
+.topbar-user{display:flex;align-items:center;gap:10px;padding:6px 12px;background:var(--bg3);border:1px solid var(--border)}
+.user-avatar{width:28px;height:28px;background:var(--red);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:white;flex-shrink:0}
+.user-info{display:flex;flex-direction:column}
+.user-name{font-size:12px;font-weight:600;color:var(--text)}
+.user-role{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.8px}
+.logout-btn{padding:6px 14px;background:transparent;border:1px solid var(--border);color:var(--text2);font-size:11px;transition:all .2s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+/* ── LAYOUT ── */
+.app-body{display:flex;flex:1;overflow:hidden;height:calc(100vh - 52px)}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:220px;background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;
+}
+.sidebar-section{padding:16px 12px 8px;font-size:10px;font-weight:600;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;
+  border-left:2px solid transparent;transition:all .15s;position:relative;
+}
+.nav-item:hover{background:var(--bg3);color:var(--text);border-left-color:var(--border)}
+.nav-item.active{background:var(--bg3);color:var(--red);border-left-color:var(--red)}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.8}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;min-width:18px;height:18px;background:var(--red);border-radius:2px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;color:white;padding:0 4px}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;overflow-y:auto;padding:24px;background:var(--bg)}
+
+/* ── PAGE HEADER ── */
+.page-header{margin-bottom:24px}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--text);line-height:1}
+.page-sub{font-size:12px;color:var(--text2);margin-top:4px}
+
+/* ── STAT CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{
+  background:var(--bg2);border:1px solid var(--border);padding:18px 20px;position:relative;overflow:hidden;
+  transition:border-color .2s;
+}
+.stat-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent, var(--red))}
+.stat-card:hover{border-color:var(--border2)}
+.stat-label{font-size:10px;font-weight:600;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;color:var(--text);line-height:1}
+.stat-change{font-size:11px;color:var(--text2);margin-top:6px;display:flex;align-items:center;gap:4px}
+.stat-change.up{color:var(--green)}
+.stat-change.down{color:var(--red)}
+.stat-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);opacity:.08}
+.stat-icon svg{width:48px;height:48px;fill:var(--text)}
+
+/* ── SECTION CARD ── */
+.card{background:var(--bg2);border:1px solid var(--border);margin-bottom:16px}
+.card-header{
+  padding:14px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-title{font-size:12px;font-weight:600;color:var(--text);letter-spacing:.5px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.card-title-dot{width:6px;height:6px;background:var(--red);clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%)}
+.card-body{padding:16px 20px}
+.card-actions{display:flex;gap:8px}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{
+  padding:10px 14px;text-align:left;font-size:10px;font-weight:600;
+  color:var(--text3);letter-spacing:1px;text-transform:uppercase;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+}
+td{
+  padding:11px 14px;border-bottom:1px solid var(--border2);
+  font-size:12px;color:var(--text);vertical-align:middle;
+}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.td-mono{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text2)}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
+  font-size:12px;font-weight:600;border:none;transition:all .2s;letter-spacing:.3px;
+}
+.btn-primary{background:var(--red);color:white}
+.btn-primary:hover{background:#FF3322;box-shadow:0 0 16px rgba(232,41,28,.3)}
+.btn-secondary{background:var(--bg4);color:var(--text2);border:1px solid var(--border)}
+.btn-secondary:hover{color:var(--text);border-color:var(--text3)}
+.btn-success{background:var(--green-dim);color:var(--green);border:1px solid rgba(28,184,90,.2)}
+.btn-success:hover{background:rgba(28,184,90,.2)}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(232,41,28,.2)}
+.btn-danger:hover{background:rgba(232,41,28,.2)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn svg{width:13px;height:13px}
+
+/* ── FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.form-full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.8px;text-transform:uppercase}
+.field input,.field select,.field textarea{
+  padding:10px 14px;background:var(--bg3);border:1px solid var(--border);
+  color:var(--text);font-size:13px;outline:none;transition:border-color .2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--red)}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 5 5-5z' fill='%237A8FA8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.field textarea{resize:vertical;min-height:80px}
+.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* ── CHARTS ── */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-card{background:var(--bg2);border:1px solid var(--border)}
+.chart-header{padding:14px 20px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.5px}
+.chart-body{padding:16px;position:relative;height:220px}
+.chart-body canvas{max-height:100%}
+
+/* ── ALERT PANEL ── */
+.alert-item{
+  display:flex;align-items:flex-start;gap:12px;padding:12px 16px;
+  border-bottom:1px solid var(--border2);transition:background .15s;
+}
+.alert-item:last-child{border-bottom:none}
+.alert-item:hover{background:var(--bg3)}
+.alert-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.alert-dot.critical{background:var(--red);box-shadow:0 0 8px var(--red)}
+.alert-dot.warning{background:var(--orange);box-shadow:0 0 8px var(--orange)}
+.alert-dot.info{background:var(--blue)}
+.alert-content{flex:1}
+.alert-msg{font-size:12px;color:var(--text);line-height:1.4}
+.alert-meta{font-size:10px;color:var(--text2);margin-top:3px;display:flex;gap:8px}
+
+/* ── MAP PLACEHOLDER ── */
+.map-placeholder{
+  background:var(--bg3);border:1px solid var(--border);
+  height:300px;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.map-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(var(--border2) 1px,transparent 1px),linear-gradient(90deg,var(--border2) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.map-dot{
+  position:absolute;width:10px;height:10px;border-radius:50%;
+  transform:translate(-50%,-50%);animation:mapPulse 2s infinite;
+}
+@keyframes mapPulse{
+  0%,100%{box-shadow:0 0 0 0 currentColor}
+  50%{box-shadow:0 0 0 8px transparent}
+}
+.map-label{position:relative;z-index:2;text-align:center}
+.map-label p{font-size:11px;color:var(--text2);margin-top:8px}
+
+/* ── TIMELINE ── */
+.timeline{display:flex;flex-direction:column;gap:0}
+.tl-item{display:flex;gap:16px;padding:12px 0;position:relative}
+.tl-item::before{content:'';position:absolute;left:11px;top:32px;bottom:-12px;width:1px;background:var(--border)}
+.tl-item:last-child::before{display:none}
+.tl-dot{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-top:2px}
+.tl-content{flex:1}
+.tl-title{font-size:12px;font-weight:600;color:var(--text)}
+.tl-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.tl-time{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+
+/* ── PROGRESS BAR ── */
+.progress-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.progress-label{font-size:12px;color:var(--text2);width:120px;flex-shrink:0}
+.progress-bar{flex:1;height:6px;background:var(--bg4);border-radius:0;overflow:hidden}
+.progress-fill{height:100%;border-radius:0;transition:width .8s ease}
+.progress-val{font-size:11px;color:var(--text2);width:36px;text-align:right;font-family:'JetBrains Mono',monospace}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;
+  display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:var(--bg2);border:1px solid var(--border);width:560px;max-width:95vw;
+  box-shadow:0 32px 64px rgba(0,0,0,.6);position:relative;max-height:90vh;overflow-y:auto;
+}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px}
+.modal-close{width:32px;height:32px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.modal-close:hover{border-color:var(--red);color:var(--red)}
+.modal-body{padding:24px}
+
+/* ── NOTIFICATION TOAST ── */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:2000;
+  background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green);
+  padding:12px 20px;font-size:12px;color:var(--text);
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+  transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none;min-width:280px;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.error{border-left-color:var(--red)}
+.toast.warning{border-left-color:var(--orange)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.tab{
+  padding:10px 18px;font-size:12px;font-weight:600;color:var(--text2);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;letter-spacing:.3px;
+}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--red);border-bottom-color:var(--red)}
+
+/* ── SEVERITY INDICATORS ── */
+.sev-1{color:#55EE8A} .sev-2{color:#FFD740} .sev-3{color:var(--orange)} .sev-4{color:var(--red)} .sev-5{color:#FF6666}
+
+/* ── EMPTY STATE ── */
+.empty{text-align:center;padding:48px 20px;color:var(--text2)}
+.empty svg{width:40px;height:40px;opacity:.3;margin-bottom:12px}
+.empty p{font-size:12px}
+
+/* ── SEARCH BAR ── */
+.search-bar{display:flex;gap:8px;margin-bottom:16px;align-items:center}
+.search-input{
+  flex:1;padding:9px 14px 9px 36px;background:var(--bg3);border:1px solid var(--border);
+  color:var(--text);font-size:12px;outline:none;transition:border-color .2s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237A8FA8' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:12px center;
+}
+.search-input:focus{border-color:var(--red)}
+
+/* ── ROLE-SPECIFIC ACCENTS ── */
+.role-admin .stat-card:nth-child(1){--accent:var(--red)}
+.role-admin .stat-card:nth-child(2){--accent:var(--orange)}
+.role-admin .stat-card:nth-child(3){--accent:var(--blue)}
+.role-admin .stat-card:nth-child(4){--accent:var(--green)}
+.role-operator .stat-card:nth-child(1){--accent:var(--orange)}
+.role-operator .stat-card:nth-child(2){--accent:var(--red)}
+.role-finance .stat-card:nth-child(1){--accent:var(--green)}
+.role-finance .stat-card:nth-child(2){--accent:var(--blue)}
+.role-warehouse .stat-card:nth-child(1){--accent:var(--cyan)}
+.role-field .stat-card:nth-child(1){--accent:var(--purple)}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.page-view{animation:fadeIn .25s ease}
+
+/* ── APPROVAL CARD ── */
+.approval-card{
+  background:var(--bg3);border:1px solid var(--border);padding:16px;
+  display:flex;align-items:flex-start;gap:16px;margin-bottom:8px;transition:border-color .2s;
+}
+.approval-card:hover{border-color:var(--text3)}
+.approval-info{flex:1}
+.approval-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px}
+.approval-meta{font-size:11px;color:var(--text2);display:flex;gap:12px;flex-wrap:wrap}
+.approval-actions{display:flex;gap:8px;flex-shrink:0}
+
+/* ── INVENTORY GAUGE ── */
+.inv-gauge{display:flex;flex-direction:column;gap:8px}
+.inv-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2)}
+.inv-row:last-child{border-bottom:none}
+.inv-name{font-size:12px;color:var(--text);width:120px;flex-shrink:0}
+.inv-bar{flex:1;height:8px;background:var(--bg4);position:relative}
+.inv-fill{height:100%;transition:width .6s ease}
+.inv-qty{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2);width:60px;text-align:right}
+.inv-status{width:60px;text-align:right}
+
+/* ── FINANCIAL ── */
+.fin-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.fin-box{background:var(--bg3);border:1px solid var(--border);padding:16px}
+.fin-box-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.fin-box-value{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px}
+.fin-box-value.income{color:var(--green)}
+.fin-box-value.expense{color:var(--red)}
+.fin-box-value.net{color:var(--blue)}
+
+/* ── 2026 VISUAL REFRESH ── */
+:root{
+  --red:#ff5c3e;
+  --red-dim:#4f1912;
+  --red-glow:rgba(255,92,62,0.18);
+  --orange:#ff9d42;
+  --orange-dim:#5a3213;
+  --yellow:#ffd257;
+  --green:#30cf78;
+  --green-dim:#113c28;
+  --blue:#4ba3ff;
+  --blue-dim:#14365e;
+  --cyan:#35d4d4;
+  --purple:#7e8cff;
+  --bg:#06111b;
+  --bg2:rgba(10,20,32,0.92);
+  --bg3:rgba(15,29,45,0.84);
+  --bg4:#14263a;
+  --border:rgba(148,182,210,0.14);
+  --border2:rgba(148,182,210,0.08);
+  --text:#edf4ff;
+  --text2:#93a8bf;
+  --text3:#58708a;
+}
+body{
+  background:
+    radial-gradient(circle at 12% 16%, rgba(53,212,212,0.11), transparent 20%),
+    radial-gradient(circle at 87% 14%, rgba(255,92,62,0.13), transparent 24%),
+    radial-gradient(circle at 58% 118%, rgba(75,163,255,0.14), transparent 34%),
+    linear-gradient(180deg, #07121d 0%, #050d16 100%);
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:-2;
+  background:
+    radial-gradient(circle at var(--cursor-x, 50%) var(--cursor-y, 50%), rgba(255,255,255,0.09), transparent 14%),
+    linear-gradient(130deg, rgba(255,255,255,0.03), transparent 28%, transparent 70%, rgba(255,255,255,0.02)),
+    radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03), transparent 34%);
+  transition:background-position .12s linear;
+}
+body::after{
+  opacity:.18;
+  mix-blend-mode:screen;
+}
+#login-screen{
+  padding:32px;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(53,212,212,0.12), transparent 24%),
+    radial-gradient(circle at 82% 18%, rgba(255,92,62,0.16), transparent 28%),
+    linear-gradient(135deg, rgba(4,10,18,0.95), rgba(5,13,22,0.98));
+}
+#login-screen::after{
+  content:'';position:absolute;right:-10%;top:10%;width:min(54vw,760px);aspect-ratio:1;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.05);
+  box-shadow:
+    0 0 0 40px rgba(255,255,255,0.02),
+    0 0 0 120px rgba(255,255,255,0.015),
+    inset 0 0 80px rgba(255,255,255,0.02);
+  opacity:.8;
+  animation:drift 18s linear infinite;
+}
+.login-box{
+  width:min(448px, calc(100vw - 40px));
+  padding:48px 42px;
+  border-radius:30px;
+  background:linear-gradient(180deg, rgba(17,30,46,0.95), rgba(8,16,26,0.94));
+  backdrop-filter:blur(18px);
+  box-shadow:
+    0 40px 90px rgba(0,0,0,0.52),
+    0 0 0 1px rgba(255,255,255,0.03) inset;
+  animation:loginDock .95s cubic-bezier(.2,.8,.2,1) both;
+}
+.login-box::before{height:3px}
+.login-box::after{
+  content:'';position:absolute;inset:14px;border-radius:22px;pointer-events:none;
+  border:1px solid rgba(255,255,255,0.04);
+}
+.login-logo{margin-bottom:30px}
+.login-logo-icon{
+  width:56px;height:56px;
+  background:linear-gradient(135deg, var(--red), var(--orange));
+  box-shadow:0 18px 40px rgba(255,92,62,0.28);
+}
+.login-title{
+  font-size:36px;
+  letter-spacing:3px;
+  text-shadow:0 12px 28px rgba(0,0,0,0.35);
+}
+.login-subtitle{
+  color:#b7c8d8;
+  letter-spacing:1.8px;
+}
+.login-label{letter-spacing:1.2px}
+.login-input,.login-select{
+  min-height:50px;
+  border-radius:16px;
+  background:rgba(5,14,24,0.78);
+  border:1px solid rgba(165,194,219,0.14);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.login-input:focus,.login-select:focus{
+  border-color:rgba(255,92,62,0.65);
+  box-shadow:0 0 0 4px rgba(255,92,62,0.12);
+}
+.login-btn{
+  border-radius:16px;
+  background:linear-gradient(135deg, var(--red), #ff8d59 58%, #ffc05a);
+  letter-spacing:2.4px;
+  box-shadow:0 18px 38px rgba(255,92,62,0.28);
+}
+.login-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 26px 46px rgba(255,92,62,0.32);
+}
+.login-hint{
+  position:relative;
+  margin-top:22px;
+  padding:18px 18px 18px 20px;
+  border-radius:18px;
+  border:1px solid rgba(165,194,219,0.14);
+  border-left:none;
+  background:linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.015));
+  overflow:hidden;
+}
+.login-hint::before{
+  content:'Live Access';
+  position:absolute;top:12px;right:16px;
+  font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;
+  color:#ffd9b8;
+}
+.login-hint p{
+  line-height:1.9;
+  padding-right:90px;
+}
+#app{
+  position:relative;
+  background:
+    radial-gradient(circle at 22% 0%, rgba(75,163,255,0.06), transparent 22%),
+    radial-gradient(circle at 88% 14%, rgba(255,92,62,0.08), transparent 18%);
+}
+#app::before{
+  content:'';position:fixed;inset:68px 0 0 220px;pointer-events:none;z-index:-1;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(53,212,212,0.12), transparent 20%),
+    radial-gradient(circle at 76% 32%, rgba(255,92,62,0.1), transparent 24%),
+    radial-gradient(circle at 64% 76%, rgba(75,163,255,0.08), transparent 18%);
+  filter:blur(10px);
+}
+.topbar{
+  height:68px;
+  padding:0 28px;
+  gap:14px;
+  backdrop-filter:blur(18px);
+  background:rgba(6,14,24,0.72);
+  border-bottom:1px solid rgba(165,194,219,0.12);
+  box-shadow:0 18px 40px rgba(0,0,0,0.22);
+}
+.topbar-logo{
+  display:flex;align-items:center;gap:12px;
+  color:var(--text);
+  font-size:24px;
+  letter-spacing:2.8px;
+  animation:brandPulse 7s ease-in-out infinite;
+}
+.topbar-logo::before{
+  content:'';
+  width:14px;height:14px;flex-shrink:0;
+  background:linear-gradient(135deg, var(--red), var(--orange));
+  clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  box-shadow:0 0 24px rgba(255,92,62,0.45);
+  animation:beaconSpin 8s linear infinite;
+}
+.topbar-sep{
+  height:30px;
+  background:linear-gradient(180deg, transparent, rgba(165,194,219,0.18), transparent);
+}
+.topbar-status{
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(165,194,219,0.1);
+  backdrop-filter:blur(10px);
+}
+.topbar-right{gap:14px}
+.topbar-alert-btn,.topbar-user,.logout-btn{
+  border-radius:16px;
+  backdrop-filter:blur(12px);
+}
+.topbar-alert-btn{
+  width:42px;height:42px;
+  background:rgba(255,255,255,0.03);
+}
+.topbar-alert-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 18px 24px rgba(0,0,0,0.16);
+}
+.alert-badge{
+  min-width:18px;height:18px;
+  border-radius:999px;
+  box-shadow:0 10px 20px rgba(255,92,62,0.25);
+}
+.topbar-user{
+  padding:7px 14px 7px 8px;
+  background:linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+  border:1px solid rgba(165,194,219,0.1);
+}
+.user-avatar{
+  width:36px;height:36px;border-radius:12px;
+  background:linear-gradient(135deg, var(--red), var(--orange));
+  box-shadow:0 14px 24px rgba(255,92,62,0.22);
+}
+.logout-btn{
+  padding:10px 16px;
+  font-weight:600;
+  letter-spacing:.7px;
+  background:rgba(255,255,255,0.02);
+}
+.logout-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 16px 22px rgba(0,0,0,0.16);
+}
+.app-body{height:calc(100vh - 68px)}
+.sidebar{
+  width:260px;
+  padding:18px 14px 18px 18px;
+  gap:4px;
+  background:linear-gradient(180deg, rgba(8,18,29,0.95), rgba(7,16,26,0.9));
+  position:relative;
+}
+.sidebar::after{
+  content:'';position:absolute;top:18px;bottom:18px;right:0;width:1px;
+  background:linear-gradient(180deg, transparent, rgba(165,194,219,0.14), transparent);
+}
+.sidebar-brief{
+  position:relative;
+  margin:2px 10px 18px 2px;
+  padding:18px 18px 16px;
+  border-radius:24px;
+  border:1px solid rgba(165,194,219,0.12);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
+    linear-gradient(180deg, rgba(14,31,49,0.95), rgba(8,18,29,0.92));
+  overflow:hidden;
+  box-shadow:0 24px 38px rgba(0,0,0,0.18);
+  animation:panelFloat 10s ease-in-out infinite;
+}
+.sidebar-brief::after{
+  content:'';position:absolute;right:-34px;top:-38px;width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle, rgba(255,92,62,0.26), transparent 66%);
+}
+.sidebar-brief-kicker{
+  position:relative;z-index:1;
+  font-size:10px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:#c5d6e5;
+  margin-bottom:10px;
+}
+.sidebar-brief-title{
+  position:relative;z-index:1;
+  font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1.6px;line-height:1.05;
+}
+.sidebar-brief-copy{
+  position:relative;z-index:1;
+  font-size:12px;line-height:1.6;color:var(--text2);margin-top:8px;
+}
+.sidebar-brief-meta{
+  position:relative;z-index:1;
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;
+}
+.sidebar-brief-meta span{
+  display:inline-flex;align-items:center;
+  padding:6px 10px;border-radius:999px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#dbe7f4;
+}
+.sidebar-section{
+  padding:14px 10px 8px;
+  letter-spacing:1.8px;
+}
+.nav-item{
+  padding:13px 14px;
+  margin-right:6px;
+  border-radius:18px;
+  border:1px solid transparent;
+  border-left:none;
+  font-weight:600;
+  overflow:hidden;
+}
+.nav-item::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.12), transparent 54%);
+  transform:translateX(-140%);
+  transition:transform .5s ease;
+  pointer-events:none;
+}
+.nav-item:hover::before,
+.nav-item.active::before{transform:translateX(130%)}
+.nav-item:hover{
+  transform:translateX(4px);
+  background:rgba(255,255,255,0.04);
+  border-color:rgba(165,194,219,0.08);
+}
+.nav-item.active{
+  color:#ffffff;
+  background:linear-gradient(135deg, rgba(255,92,62,0.94), rgba(255,155,66,0.85));
+  box-shadow:0 16px 28px rgba(255,92,62,0.22);
+}
+.nav-item.active svg{opacity:1}
+.nav-badge{
+  border-radius:999px;
+  background:#f4f8fd;
+  color:#06111b;
+  min-width:22px;
+}
+.main{
+  position:relative;
+  isolation:isolate;
+  padding:28px 30px 56px;
+  background:transparent;
+}
+.main::before{
+  content:'';position:absolute;inset:18px 22px 20px 0;border-radius:34px;z-index:-1;
+  border:1px solid rgba(165,194,219,0.08);
+  background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+}
+.main::after{
+  content:'';position:absolute;right:50px;top:24px;width:320px;height:320px;border-radius:50%;z-index:-1;
+  background:radial-gradient(circle, rgba(75,163,255,0.16), transparent 62%);
+  filter:blur(40px);
+  opacity:.42;
+}
+.page-header{
+  position:relative;
+  overflow:hidden;
+  padding:28px 28px 24px;
+  margin-bottom:28px;
+  border-radius:30px;
+  border:1px solid rgba(165,194,219,0.12);
+  background:
+    linear-gradient(135deg, rgba(14,30,47,0.92), rgba(10,20,32,0.88) 54%, rgba(75,163,255,0.08));
+  box-shadow:0 28px 44px rgba(0,0,0,0.18);
+}
+.page-header::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(118deg, transparent 0 52%, rgba(255,255,255,0.04) 72%, transparent 100%);
+  pointer-events:none;
+  animation:headerSweep 12s linear infinite;
+}
+.page-header::after{
+  content:'';position:absolute;right:-50px;top:-72px;width:220px;height:220px;border-radius:50%;
+  background:radial-gradient(circle, rgba(255,92,62,0.25), transparent 62%);
+}
+.page-title{
+  position:relative;
+  z-index:1;
+  max-width:70%;
+  font-size:42px;
+  letter-spacing:3px;
+}
+.page-sub{
+  position:relative;
+  z-index:1;
+  max-width:58ch;
+  margin-top:10px;
+  font-size:13px;
+  line-height:1.65;
+}
+.page-kicker-row{
+  position:relative;z-index:1;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;
+}
+.page-kicker{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:7px 12px;border-radius:999px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:#ebf2fa;
+}
+.page-kicker::before{
+  content:'';width:7px;height:7px;border-radius:50%;
+  background:linear-gradient(135deg, var(--cyan), var(--blue));
+  box-shadow:0 0 12px rgba(53,212,212,0.45);
+}
+.page-telemetry{
+  position:relative;z-index:1;
+  display:flex;gap:12px;flex-wrap:wrap;margin-top:18px;
+}
+.telemetry-chip{
+  min-width:110px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
+  transition:transform .25s ease, border-color .25s ease, background .25s ease;
+}
+.telemetry-chip:hover{
+  transform:translateY(-4px);
+  border-color:rgba(255,255,255,0.16);
+  background:rgba(255,255,255,0.08);
+}
+.telemetry-chip strong{
+  display:block;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:24px;
+  letter-spacing:1.4px;
+  line-height:1;
+  color:#ffffff;
+}
+.telemetry-chip em{
+  display:block;
+  margin-top:5px;
+  font-style:normal;
+  font-size:10px;
+  letter-spacing:1.2px;
+  text-transform:uppercase;
+  color:#b9c9d9;
+}
+.stat-grid{gap:16px;margin-bottom:28px}
+.stat-card{
+  min-height:148px;
+  padding:20px 22px 22px;
+  border-radius:24px;
+  border:1px solid rgba(165,194,219,0.1);
+  background:linear-gradient(180deg, rgba(14,30,47,0.84), rgba(8,18,29,0.92));
+  box-shadow:0 22px 36px rgba(0,0,0,0.18);
+  transition:transform .24s ease, border-color .24s ease, box-shadow .24s ease;
+  will-change:transform, box-shadow;
+}
+.stat-card::before{width:4px}
+.stat-card::after{
+  content:'';position:absolute;right:-36px;bottom:-42px;width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%);
+  opacity:.32;
+}
+.stat-card:hover{
+  transform:translateY(-6px);
+  border-color:rgba(165,194,219,0.16);
+  box-shadow:0 30px 50px rgba(0,0,0,0.26);
+}
+.stat-label{letter-spacing:1.5px}
+.stat-value{font-size:42px}
+.card,.chart-card,.modal{
+  overflow:hidden;
+  border-radius:26px;
+  border:1px solid rgba(165,194,219,0.1);
+  background:linear-gradient(180deg, rgba(13,25,39,0.92), rgba(8,18,29,0.88));
+  box-shadow:0 22px 36px rgba(0,0,0,0.18);
+  will-change:transform, box-shadow;
+}
+.card,.chart-card,.fin-box,.approval-card{
+  transition:transform .26s ease, box-shadow .26s ease, border-color .26s ease;
+}
+.card:hover,.chart-card:hover,.fin-box:hover{
+  transform:translateY(-4px);
+  box-shadow:0 30px 50px rgba(0,0,0,0.24);
+}
+.card-header,.chart-header{
+  padding:18px 22px;
+  border-bottom:1px solid rgba(165,194,219,0.08);
+  background:rgba(255,255,255,0.02);
+}
+.card-title{
+  letter-spacing:1px;
+}
+.card-title-dot{
+  width:8px;height:8px;
+  box-shadow:0 0 12px rgba(255,92,62,0.32);
+}
+.card-body{padding:20px 22px}
+.chart-grid{gap:18px}
+.chart-body{padding:18px;height:240px}
+.table-wrap{
+  border-radius:18px;
+  overflow:auto;
+}
+th{
+  padding:14px 16px;
+  color:#9ab0c6;
+  background:rgba(255,255,255,0.02);
+}
+td{padding:14px 16px}
+tr:hover td{background:rgba(255,255,255,0.04)}
+.btn{
+  position:relative;
+  overflow:hidden;
+  border-radius:14px;
+  padding:9px 15px;
+  transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease, color .2s ease;
+}
+.btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(120deg, transparent 20%, rgba(255,255,255,0.22), transparent 58%);
+  transform:translateX(-140%);
+  transition:transform .45s ease;
+  pointer-events:none;
+}
+.btn:hover::after{transform:translateX(140%)}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{
+  background:linear-gradient(135deg, var(--red), #ff8a59 62%, #ffbb59);
+  box-shadow:0 16px 26px rgba(255,92,62,0.22);
+}
+.btn-secondary{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(165,194,219,0.12);
+}
+.btn-success{
+  background:linear-gradient(135deg, rgba(48,207,120,0.24), rgba(48,207,120,0.1));
+}
+.btn-danger{
+  background:linear-gradient(135deg, rgba(255,92,62,0.22), rgba(255,92,62,0.08));
+}
+.field input,.field select,.field textarea,.search-input{
+  min-height:46px;
+  border-radius:16px;
+  background:rgba(8,18,29,0.74);
+  border:1px solid rgba(165,194,219,0.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.02);
+}
+.field input:focus,.field select:focus,.field textarea:focus,.search-input:focus{
+  border-color:rgba(75,163,255,0.45);
+  box-shadow:0 0 0 4px rgba(75,163,255,0.11);
+}
+.tabs{
+  width:max-content;
+  max-width:100%;
+  padding:6px;
+  gap:6px;
+  border:1px solid rgba(165,194,219,0.1);
+  border-radius:18px;
+  background:rgba(255,255,255,0.03);
+}
+.tab{
+  border-radius:12px;
+  border-bottom:none;
+  white-space:nowrap;
+}
+.tab.active{
+  color:#ffffff;
+  border-bottom-color:transparent;
+  background:linear-gradient(135deg, rgba(255,92,62,0.95), rgba(255,155,66,0.88));
+  box-shadow:0 14px 22px rgba(255,92,62,0.2);
+}
+.alert-item,.approval-card,.fin-box{
+  border-radius:18px;
+  background:rgba(255,255,255,0.02);
+}
+.alert-item{
+  margin:8px 10px;
+  border:1px solid rgba(165,194,219,0.08);
+  border-bottom:none;
+  position:relative;
+  overflow:hidden;
+}
+.alert-item::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(120deg, transparent 0 35%, rgba(255,255,255,0.06) 50%, transparent 65%);
+  transform:translateX(-130%);
+  transition:transform .55s ease;
+  pointer-events:none;
+}
+.alert-item:hover::before{transform:translateX(125%)}
+.alert-item:last-child{margin-bottom:12px}
+.approval-card{
+  padding:18px;
+  border-radius:20px;
+  border:1px solid rgba(165,194,219,0.1);
+  background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+}
+.approval-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 18px 28px rgba(0,0,0,0.16);
+}
+.progress-bar,.inv-bar{
+  border-radius:999px;
+  background:rgba(255,255,255,0.06);
+}
+.progress-fill,.inv-fill{
+  border-radius:999px;
+  box-shadow:0 0 22px rgba(255,255,255,0.08);
+}
+.modal-overlay{
+  background:rgba(2,8,14,0.78);
+  backdrop-filter:blur(10px);
+}
+.modal-overlay.open .modal{
+  animation:modalLift .34s ease both;
+}
+.modal-header{padding:22px 24px 18px}
+.modal-body{padding:24px}
+.modal-close{
+  border-radius:12px;
+}
+.toast{
+  border-radius:18px;
+  border-left-width:0;
+  border:1px solid rgba(165,194,219,0.12);
+  background:linear-gradient(135deg, rgba(15,29,45,0.96), rgba(9,19,31,0.94));
+  box-shadow:0 26px 46px rgba(0,0,0,0.28);
+}
+.toast.show{
+  transform:translateY(0) scale(1);
+}
+.toast.error{box-shadow:0 26px 46px rgba(95,16,12,0.32)}
+.toast.warning{box-shadow:0 26px 46px rgba(112,60,17,0.32)}
+.page-view{animation:none}
+.tilt-surface{
+  transform:
+    perspective(1200px)
+    rotateX(var(--tilt-rotate-x, 0deg))
+    rotateY(var(--tilt-rotate-y, 0deg))
+    translateY(var(--tilt-lift, 0px));
+}
+.tilt-surface::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at var(--tilt-shine-x, 50%) var(--tilt-shine-y, 50%), rgba(255,255,255,0.14), transparent 34%);
+  opacity:var(--tilt-shine-opacity, 0);
+  transition:opacity .22s ease;
+}
+.reveal-ready{
+  opacity:0;
+  transform:translateY(18px) scale(.985);
+}
+.reveal-ready.reveal-in{
+  animation:riseIn .68s cubic-bezier(.2,.8,.2,1) forwards;
+  animation-delay:var(--enter-delay, 0ms);
+}
+body[data-role="admin"] .sidebar-brief::after{background:radial-gradient(circle, rgba(255,92,62,0.28), transparent 66%)}
+body[data-role="operator"] .sidebar-brief::after{background:radial-gradient(circle, rgba(255,157,66,0.28), transparent 66%)}
+body[data-role="field"] .sidebar-brief::after{background:radial-gradient(circle, rgba(126,140,255,0.28), transparent 66%)}
+body[data-role="warehouse"] .sidebar-brief::after{background:radial-gradient(circle, rgba(53,212,212,0.28), transparent 66%)}
+body[data-role="finance"] .sidebar-brief::after{background:radial-gradient(circle, rgba(48,207,120,0.28), transparent 66%)}
+@keyframes drift{
+  0%{transform:rotate(0deg) translate3d(0,0,0)}
+  50%{transform:rotate(180deg) translate3d(-12px, 16px, 0)}
+  100%{transform:rotate(360deg) translate3d(0,0,0)}
+}
+@keyframes loginDock{
+  0%{opacity:0;transform:translateY(26px) scale(.96)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes panelFloat{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-6px)}
+}
+@keyframes brandPulse{
+  0%,100%{text-shadow:0 0 0 rgba(255,92,62,0)}
+  50%{text-shadow:0 0 22px rgba(255,92,62,0.22)}
+}
+@keyframes beaconSpin{
+  0%{transform:rotate(0deg) scale(1)}
+  50%{transform:rotate(180deg) scale(1.08)}
+  100%{transform:rotate(360deg) scale(1)}
+}
+@keyframes headerSweep{
+  0%{transform:translateX(-24%)}
+  100%{transform:translateX(24%)}
+}
+@keyframes riseIn{
+  0%{opacity:0;transform:translateY(18px) scale(.985)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes modalLift{
+  0%{opacity:0;transform:translateY(18px) scale(.97)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .topbar{
+    height:auto;
+    min-height:68px;
+    padding:14px 16px;
+    flex-wrap:wrap;
+  }
+  .topbar-right{
+    width:100%;
+    margin-left:0;
+    justify-content:space-between;
+  }
+  .app-body{
+    height:auto;
+    flex-direction:column;
+  }
+  .sidebar{
+    width:100%;
+    padding:14px;
+    border-right:none;
+    border-bottom:1px solid rgba(165,194,219,0.1);
+    flex-direction:row;
+    overflow-x:auto;
+    overflow-y:hidden;
+  }
+  .sidebar::after{display:none}
+  .sidebar-section{display:none}
+  .sidebar-brief{
+    min-width:240px;
+    margin:0 14px 0 0;
+  }
+  .nav-item{
+    flex:0 0 auto;
+    margin-right:0;
+    white-space:nowrap;
+  }
+  .main{
+    padding:20px 16px 40px;
+  }
+  .main::before{
+    inset:8px 0 8px 0;
+    border-radius:26px;
+  }
+  .main::after{right:10px;top:14px}
+  .page-header{
+    padding:24px 20px 22px;
+  }
+  .page-title{
+    max-width:none;
+    font-size:34px;
+  }
+  .page-telemetry{
+    margin-top:14px;
+  }
+  .chart-grid{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+  .form-grid-3{grid-template-columns:1fr}
+  .fin-summary{grid-template-columns:1fr}
+  .stat-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:640px){
+  #login-screen{padding:18px}
+  .login-box{
+    padding:34px 24px;
+    border-radius:24px;
+  }
+  .login-hint p{padding-right:0}
+  .login-hint::before{position:static;display:block;margin-bottom:8px}
+  .topbar-logo{
+    font-size:22px;
+    letter-spacing:2px;
+  }
+  .topbar-status{
+    display:none;
+  }
+  .topbar-user{
+    flex:1;
+  }
+  .sidebar-brief{
+    display:none;
+  }
+  .page-header{
+    padding:20px 18px 18px;
+  }
+  .telemetry-chip{
+    min-width:calc(50% - 6px);
+  }
+  .stat-grid{
+    grid-template-columns:1fr;
+  }
+  .card-header,.chart-header,.card-body,.modal-body{
+    padding-left:16px;
+    padding-right:16px;
+  }
+  .toast{
+    left:16px;
+    right:16px;
+    bottom:16px;
+    min-width:0;
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  *,
+  *::before,
+  *::after{
+    animation:none !important;
+    transition:none !important;
+    scroll-behavior:auto !important;
+  }
+  .tilt-surface{
+    transform:none !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN ══════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div>
+        <div class="login-title">DisasterMIS</div>
+        <div class="login-subtitle">Smart Response System</div>
+      </div>
+    </div>
+    <label class="login-label" for="l-user">Username</label>
+    <input class="login-input" id="l-user" type="text" placeholder="Enter username" value="Ali Raza">
+    <label class="login-label" for="l-pass">Password</label>
+    <input class="login-input" id="l-pass" type="password" placeholder="Enter password" value="Admin@123">
+    <label class="login-label" for="l-role">Login As</label>
+    <select class="login-select" id="l-role">
+      <option value="admin">Administrator</option>
+      <option value="operator">Emergency Operator</option>
+      <option value="field">Field Officer</option>
+      <option value="warehouse">Warehouse Manager</option>
+      <option value="finance">Finance Officer</option>
+    </select>
+    <button class="login-btn" onclick="doLogin()">AUTHENTICATE →</button>
+    <div class="login-hint">
+      <p><span>Quick start:</span> Ali Raza / Admin@123 / admin works with the seeded database.<br>Switch roles here to explore each operational interface without changing backend logic.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ APP ══════════════════ -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-logo">DisasterMIS</div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-status"><span class="status-dot"></span> SYSTEM ONLINE</div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-status mono" id="top-time">--:--:--</div>
+    <div class="topbar-right">
+      <button class="topbar-alert-btn" onclick="showAlertPanel()" title="Alerts">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="alert-badge" id="alert-count">3</span>
+      </button>
+      <div class="topbar-user">
+        <div class="user-avatar" id="top-avatar">A</div>
+        <div class="user-info">
+          <div class="user-name" id="top-username">Administrator</div>
+          <div class="user-role" id="top-role">System Admin</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">LOG OUT</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar"></div>
+    <!-- MAIN -->
+    <div class="main" id="main-content"></div>
+  </div>
+</div>
+
+<!-- ALERT PANEL MODAL -->
+<div class="modal-overlay" id="alert-modal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <div class="modal-title">SYSTEM ALERTS</div>
+      <button class="modal-close" onclick="closeModal('alert-modal')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0" id="alert-list"></div>
+  </div>
+</div>
+
+<!-- GENERIC MODAL -->
+<div class="modal-overlay" id="generic-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="gmodal-title">MODAL</div>
+      <button class="modal-close" onclick="closeModal('generic-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="gmodal-body"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA STORE
+// ═══════════════════════════════════════════════
+const DB = {
+  emergencyReports: [
+    {id:'RPT-001',type:'Flood',location:'Nowshera District',severity:5,status:'Active',reportedBy:'Citizen',time:'2025-05-01 08:23',lat:34.01,lng:71.97},
+    {id:'RPT-002',type:'Earthquake',location:'Peshawar Valley',severity:4,status:'Assigned',reportedBy:'Helpline',time:'2025-05-01 09:11',lat:34.02,lng:71.55},
+    {id:'RPT-003',type:'Urban Fire',location:'Hayatabad Block 3',severity:3,status:'Resolved',reportedBy:'Mobile App',time:'2025-05-01 10:45',lat:33.99,lng:71.49},
+    {id:'RPT-004',type:'Landslide',location:'Swat Valley',severity:4,status:'Active',reportedBy:'Field Officer',time:'2025-05-01 11:02',lat:34.77,lng:72.36},
+    {id:'RPT-005',type:'Flood',location:'Charsadda',severity:3,status:'Pending',reportedBy:'Citizen',time:'2025-05-01 11:30',lat:34.15,lng:71.74},
+  ],
+  disasterEvents: [
+    {id:'EVT-001',name:'Nowshera Flood 2025',type:'Flood',region:'KPK North',severity:'Critical',status:'Active',start:'2025-04-28',budget:5000000},
+    {id:'EVT-002',name:'Peshawar Earthquake',type:'Earthquake',region:'Peshawar',severity:'High',status:'Active',start:'2025-05-01',budget:3500000},
+    {id:'EVT-003',name:'Hayatabad Fire',type:'Urban Fire',region:'Peshawar',severity:'Medium',status:'Resolved',start:'2025-04-30',budget:800000},
+  ],
+  rescueTeams: [
+    {id:'TM-001',name:'Alpha Medical Unit',type:'Medical',location:'Peshawar HQ',status:'Available',capacity:12},
+    {id:'TM-002',name:'Bravo Fire Squad',type:'Fire',location:'Nowshera',status:'Busy',capacity:8},
+    {id:'TM-003',name:'Charlie Rescue',type:'Rescue',location:'Swat',status:'Assigned',capacity:15},
+    {id:'TM-004',name:'Delta Medical',type:'Medical',location:'Mardan',status:'Available',capacity:10},
+    {id:'TM-005',name:'Echo Fire Unit',type:'Fire',location:'Peshawar HQ',status:'Available',capacity:6},
+  ],
+  teamAssignments: [
+    {id:'ASN-001',team:'Bravo Fire Squad',event:'Nowshera Flood 2025',assignedAt:'2025-05-01 08:30',status:'Active',completedAt:null},
+    {id:'ASN-002',team:'Charlie Rescue',event:'Peshawar Earthquake',assignedAt:'2025-05-01 09:20',status:'Active',completedAt:null},
+  ],
+  resources: [
+    {id:'RES-001',name:'Food Packages',type:'Food',unit:'Bags',threshold:500},
+    {id:'RES-002',name:'Bottled Water',type:'Water',unit:'Liters',threshold:2000},
+    {id:'RES-003',name:'Medical Kits',type:'Medicine',unit:'Kits',threshold:100},
+    {id:'RES-004',name:'Tents',type:'Shelter',unit:'Units',threshold:50},
+    {id:'RES-005',name:'Blankets',type:'Shelter',unit:'Units',threshold:200},
+  ],
+  warehouses: [
+    {id:'WH-001',name:'Peshawar Central',location:'Peshawar',capacity:10000},
+    {id:'WH-002',name:'Nowshera Depot',location:'Nowshera',capacity:6000},
+    {id:'WH-003',name:'Mardan Store',location:'Mardan',capacity:4000},
+  ],
+  inventory: [
+    {warehouse:'WH-001',resource:'RES-001',available:1200,dispatched:300,consumed:150},
+    {warehouse:'WH-001',resource:'RES-002',available:4500,dispatched:1000,consumed:500},
+    {warehouse:'WH-001',resource:'RES-003',available:85,dispatched:40,consumed:20},
+    {warehouse:'WH-002',resource:'RES-004',available:120,dispatched:30,consumed:10},
+    {warehouse:'WH-002',resource:'RES-005',available:180,dispatched:60,consumed:30},
+    {warehouse:'WH-003',resource:'RES-001',available:300,dispatched:100,consumed:50},
+    {warehouse:'WH-003',resource:'RES-002',available:800,dispatched:200,consumed:100},
+  ],
+  allocations: [
+    {id:'ALO-001',resource:'Food Packages',warehouse:'WH-001',event:'EVT-001',reqQty:500,appQty:400,status:'Approved',date:'2025-05-01',purpose:'Flood relief'},
+    {id:'ALO-002',resource:'Medical Kits',warehouse:'WH-001',event:'EVT-002',reqQty:80,appQty:null,status:'Pending',date:'2025-05-01',purpose:'Earthquake response'},
+    {id:'ALO-003',resource:'Tents',warehouse:'WH-002',event:'EVT-001',reqQty:100,appQty:80,status:'Approved',date:'2025-04-30',purpose:'Shelter'},
+  ],
+  hospitals: [
+    {id:'HSP-001',name:'Lady Reading Hospital',location:'Peshawar',totalBeds:800,availableBeds:120,criticalCases:18},
+    {id:'HSP-002',name:'Nowshera District Hospital',location:'Nowshera',totalBeds:200,availableBeds:35,criticalCases:8},
+    {id:'HSP-003',name:'Mardan Medical Complex',location:'Mardan',totalBeds:400,availableBeds:95,criticalCases:5},
+  ],
+  patients: [
+    {id:'PAT-001',name:'Muhammad Ali',age:34,gender:'Male',condition:'Critical',hospital:'HSP-001',admission:'2025-05-01 10:00',event:'EVT-002'},
+    {id:'PAT-002',name:'Fatima Bibi',age:67,gender:'Female',condition:'Stable',hospital:'HSP-001',admission:'2025-05-01 08:30',event:'EVT-001'},
+    {id:'PAT-003',name:'Ahmed Khan',age:12,gender:'Male',condition:'Serious',hospital:'HSP-002',admission:'2025-05-01 09:15',event:'EVT-001'},
+    {id:'PAT-004',name:'Zainab Noor',age:28,gender:'Female',condition:'Stable',hospital:'HSP-003',admission:'2025-05-01 11:00',event:'EVT-003'},
+  ],
+  financials: [
+    {id:'TXN-001',type:'Donation',amount:500000,ref:'DON-2025-001',date:'2025-05-01',desc:'Govt Emergency Fund',by:'Federal Govt'},
+    {id:'TXN-002',type:'Expense',amount:120000,ref:'EXP-2025-001',date:'2025-05-01',desc:'Rescue equipment procurement',by:'Admin'},
+    {id:'TXN-003',type:'Donation',amount:250000,ref:'DON-2025-002',date:'2025-04-30',desc:'NDMA Allocation',by:'NDMA'},
+    {id:'TXN-004',type:'Expense',amount:85000,ref:'EXP-2025-002',date:'2025-04-30',desc:'Food supply purchase',by:'Warehouse'},
+    {id:'TXN-005',type:'Procurement',amount:45000,ref:'PRO-2025-001',date:'2025-04-29',desc:'Medical kit bulk order',by:'Finance'},
+  ],
+  donors: [
+    {id:'DNR-001',name:'Federal Government',type:'Organization',contact:'fed-relief@gov.pk',total:500000},
+    {id:'DNR-002',name:'NDMA',type:'Organization',contact:'ndma@pk.gov',total:250000},
+    {id:'DNR-003',name:'Edhi Foundation',type:'NGO',contact:'info@edhi.org',total:180000},
+    {id:'DNR-004',name:'Akhtar Hussain',type:'Individual',contact:'+92-300-1234567',total:50000},
+  ],
+  approvals: [
+    {id:'APR-001',type:'Resource Allocation',ref:'ALO-002',requestedBy:'Warehouse Mgr',requestedAt:'2025-05-01 09:00',status:'Pending',comments:''},
+    {id:'APR-002',type:'Team Deployment',ref:'TM-004',requestedBy:'Emergency Op',requestedAt:'2025-05-01 08:45',status:'Pending',comments:''},
+    {id:'APR-003',type:'Financial Approval',ref:'TXN-005',requestedBy:'Finance Off',requestedAt:'2025-04-29 14:00',status:'Approved',comments:'Approved by Admin'},
+    {id:'APR-004',type:'Resource Allocation',ref:'ALO-003',requestedBy:'Field Officer',requestedAt:'2025-04-30 10:00',status:'Approved',comments:'Approved'},
+  ],
+  auditLogs: [
+    {id:'LOG-001',user:'admin',action:'LOGIN',table:'USER',old:null,new:null,time:'2025-05-01 08:00'},
+    {id:'LOG-002',user:'operator1',action:'INSERT',table:'EMERGENCY_REPORT',old:null,new:'RPT-001',time:'2025-05-01 08:23'},
+    {id:'LOG-003',user:'warehouse1',action:'UPDATE',table:'INVENTORY',old:'1500',new:'1200',time:'2025-05-01 08:35'},
+    {id:'LOG-004',user:'admin',action:'APPROVE',table:'APPROVAL_REQUEST',old:'Pending',new:'Approved',time:'2025-05-01 09:05'},
+    {id:'LOG-005',user:'finance1',action:'INSERT',table:'FINANCIAL_TRANSACTION',old:null,new:'TXN-005',time:'2025-04-29 14:00'},
+  ],
+  alerts: [
+    {id:'ALT-001',type:'critical',msg:'CRITICAL: Inventory below threshold — Medical Kits (85 units)',time:'2 min ago',read:false},
+    {id:'ALT-002',type:'warning',msg:'WARNING: Nowshera flood severity escalated to Level 5',time:'15 min ago',read:false},
+    {id:'ALT-003',type:'info',msg:'INFO: Charlie Rescue Team deployed to Peshawar Earthquake zone',time:'41 min ago',read:false},
+    {id:'ALT-004',type:'warning',msg:'WARNING: Hospital bed availability critical at Nowshera District',time:'1 hr ago',read:true},
+  ]
+};
+
+// ═══════════════════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════════════════
+let currentUser = null;
+let currentPage = 'dashboard';
+let chartInstances = {};
+
+const ROLES = {
+  admin:     {label:'Administrator',    color:'#E8291C', nav:['dashboard','reports','events','teams','resources','hospitals','financials','approvals','audit','alerts']},
+  operator:  {label:'Emergency Operator',color:'#F57C2B',nav:['dashboard','reports','events','teams','approvals','alerts']},
+  field:     {label:'Field Officer',    color:'#9B59E8', nav:['dashboard','reports','teams','hospitals']},
+  warehouse: {label:'Warehouse Manager',color:'#18C8D4', nav:['dashboard','resources','approvals']},
+  finance:   {label:'Finance Officer',  color:'#1CB85A', nav:['dashboard','financials','approvals','audit']},
+};
+
+const NAV_ITEMS = {
+  dashboard:  {label:'Dashboard',       icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+  reports:    {label:'Emergency Reports',icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'},
+  events:     {label:'Disaster Events', icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'},
+  teams:      {label:'Rescue Teams',    icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'},
+  resources:  {label:'Resources',       icon:'<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'},
+  hospitals:  {label:'Hospitals',       icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'},
+  financials: {label:'Financial',       icon:'<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>'},
+  approvals:  {label:'Approvals',       icon:'<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'},
+  audit:      {label:'Audit Log',       icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>'},
+  alerts:     {label:'Alerts',          icon:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'},
+};
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+function doLogin() {
+  const role = document.getElementById('l-role').value;
+  const user = document.getElementById('l-user').value || 'admin';
+  currentUser = {role, username: user, label: ROLES[role].label};
+  document.getElementById('login-screen').classList.add('hidden');
+  const app = document.getElementById('app');
+  app.classList.add('visible');
+  document.getElementById('top-avatar').textContent = user[0].toUpperCase();
+  document.getElementById('top-username').textContent = user;
+  document.getElementById('top-role').textContent = ROLES[role].label;
+  buildSidebar();
+  navigate('dashboard');
+  startClock();
+  showToast('Welcome back, ' + user + '!', 'success');
+}
+
+function doLogout() {
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').classList.remove('hidden');
+  currentUser = null;
+  document.body.removeAttribute('data-role');
+  document.body.removeAttribute('data-page');
+  Object.values(chartInstances).forEach(c => c.destroy());
+  chartInstances = {};
+}
+
+function startClock() {
+  function tick() {
+    const now = new Date();
+    document.getElementById('top-time').textContent =
+      now.toTimeString().split(' ')[0];
+  }
+  tick(); setInterval(tick, 1000);
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function buildSidebar() {
+  const role = currentUser.role;
+  const nav = ROLES[role].nav;
+  const activeEvents = safeList('disasterEvents').filter(e=>e.status==='Active').length;
+  const unreadAlerts = safeList('alerts').filter(a=>!a.read).length;
+  const roleMessages = {
+    admin:'National command visibility across operations, finance, supply, and escalation workflows.',
+    operator:'Real-time report intake, team coordination, and incident response routing.',
+    field:'Frontline reporting with hospital, resource, and rescue coordination in motion.',
+    warehouse:'Supply readiness, allocation flow, and stock pressure monitoring from one place.',
+    finance:'Budget control, transaction tracing, and approval accountability at a glance.'
+  };
+
+  document.body.dataset.role = role;
+
+  let html = `
+    <div class="sidebar-brief">
+      <div class="sidebar-brief-kicker">Active Role</div>
+      <div class="sidebar-brief-title">${ROLES[role].label}</div>
+      <div class="sidebar-brief-copy">${roleMessages[role] || 'Operational visibility tailored to your role.'}</div>
+      <div class="sidebar-brief-meta">
+        <span>${activeEvents} live events</span>
+        <span>${unreadAlerts} unread alerts</span>
+      </div>
+    </div>
+    <div class="sidebar-section">Mission Control</div>`;
+  nav.forEach(key => {
+    const item = NAV_ITEMS[key];
+    const badge = key === 'approvals' ? DB.approvals.filter(a=>a.status==='Pending').length : (key==='alerts' ? DB.alerts.filter(a=>!a.read).length : 0);
+    html += `<div class="nav-item" id="nav-${key}" onclick="navigate('${key}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
+      ${item.label}
+      ${badge > 0 ? `<span class="nav-badge">${badge}</span>` : ''}
+    </div>`;
+  });
+  html += `<div class="sidebar-section" style="margin-top:auto">System</div>
+  <div class="nav-item" onclick="showToast('Settings coming soon','info')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    Settings
+  </div>`;
+  document.getElementById('sidebar').innerHTML = html;
+}
+
+function navigate(page) {
+  currentPage = page;
+  document.body.dataset.page = page;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const active = document.getElementById('nav-' + page);
+  if (active) active.classList.add('active');
+  Object.values(chartInstances).forEach(c => { try { c.destroy(); } catch(e){} });
+  chartInstances = {};
+  const main = document.getElementById('main-content');
+  main.className = 'main page-view role-' + currentUser.role;
+  main.dataset.page = page;
+  const pages = {
+    dashboard:  renderDashboard,
+    reports:    renderReports,
+    events:     renderEvents,
+    teams:      renderTeams,
+    resources:  renderResources,
+    hospitals:  renderHospitals,
+    financials: renderFinancials,
+    approvals:  renderApprovals,
+    audit:      renderAudit,
+    alerts:     renderAlerts,
+  };
+  main.innerHTML = (pages[page] || renderDashboard)();
+  initCharts(page);
+  enhancePageView(page);
+}
+
+function safeList(key) {
+  return Array.isArray(DB[key]) ? DB[key] : [];
+}
+
+function compactNumber(value) {
+  return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(value || 0));
+}
+
+function getOpenReportsCount() {
+  return safeList('emergencyReports').filter(report => report.status !== 'Resolved').length;
+}
+
+function getLowStockCount() {
+  return safeList('inventory').filter(item => {
+    const resource = safeList('resources').find(entry => entry.id === item.resource);
+    return resource && item.available < resource.threshold;
+  }).length;
+}
+
+function getFinancialTotals() {
+  return safeList('financials').reduce((summary, txn) => {
+    if (txn.type === 'Donation') summary.income += Number(txn.amount || 0);
+    else summary.expense += Number(txn.amount || 0);
+    return summary;
+  }, { income: 0, expense: 0 });
+}
+
+function getPageTelemetry(page) {
+  const activeEvents = safeList('disasterEvents').filter(event => event.status === 'Active').length;
+  const unreadAlerts = safeList('alerts').filter(alert => !alert.read).length;
+  const openReports = getOpenReportsCount();
+  const approvals = safeList('approvals');
+  const availableTeams = safeList('rescueTeams').filter(team => team.status === 'Available').length;
+  const assignedTeams = safeList('rescueTeams').filter(team => team.status === 'Assigned' || team.status === 'Busy').length;
+  const bedsOpen = safeList('hospitals').reduce((sum, hospital) => sum + Number(hospital.availableBeds || 0), 0);
+  const financials = getFinancialTotals();
+
+  const telemetryMap = {
+    dashboard: [
+      { label: 'Live Events', value: activeEvents },
+      { label: 'Open Reports', value: openReports },
+      { label: 'Unread Alerts', value: unreadAlerts }
+    ],
+    reports: [
+      { label: 'Open Reports', value: openReports },
+      { label: 'Critical', value: safeList('emergencyReports').filter(report => Number(report.severity) >= 4).length },
+      { label: 'Assigned', value: safeList('emergencyReports').filter(report => report.status === 'Assigned').length }
+    ],
+    events: [
+      { label: 'Active', value: activeEvents },
+      { label: 'Closed', value: safeList('disasterEvents').filter(event => event.status === 'Closed' || event.status === 'Resolved').length },
+      { label: 'Budget Watch', value: `PKR ${compactNumber(safeList('disasterEvents').reduce((sum, event) => sum + Number(event.budget || 0), 0))}` }
+    ],
+    teams: [
+      { label: 'Available', value: availableTeams },
+      { label: 'Deployed', value: assignedTeams },
+      { label: 'Assignments', value: safeList('teamAssignments').length }
+    ],
+    resources: [
+      { label: 'Warehouses', value: safeList('warehouses').length },
+      { label: 'Low Stock', value: getLowStockCount() },
+      { label: 'Pending Requests', value: safeList('allocations').filter(allocation => allocation.status === 'Pending').length }
+    ],
+    hospitals: [
+      { label: 'Open Beds', value: bedsOpen },
+      { label: 'Patients', value: safeList('patients').length },
+      { label: 'Critical Cases', value: safeList('patients').filter(patient => patient.condition === 'Critical').length }
+    ],
+    financials: [
+      { label: 'Incoming', value: `PKR ${compactNumber(financials.income)}` },
+      { label: 'Outflow', value: `PKR ${compactNumber(financials.expense)}` },
+      { label: 'Net', value: `PKR ${compactNumber(financials.income - financials.expense)}` }
+    ],
+    approvals: [
+      { label: 'Pending', value: approvals.filter(item => item.status === 'Pending').length },
+      { label: 'Approved', value: approvals.filter(item => item.status === 'Approved').length },
+      { label: 'Rejected', value: approvals.filter(item => item.status === 'Rejected').length }
+    ],
+    audit: [
+      { label: 'Log Entries', value: safeList('auditLogs').length },
+      { label: 'Approvals Logged', value: safeList('auditLogs').filter(log => log.action === 'APPROVE').length },
+      { label: 'Logins', value: safeList('auditLogs').filter(log => log.action === 'LOGIN').length }
+    ],
+    alerts: [
+      { label: 'Unread', value: unreadAlerts },
+      { label: 'Critical', value: safeList('alerts').filter(alert => alert.type === 'critical').length },
+      { label: 'Cleared', value: safeList('alerts').filter(alert => alert.read).length }
+    ]
+  };
+
+  return telemetryMap[page] || [];
+}
+
+function enhancePageHeader(page) {
+  const header = document.querySelector('#main-content .page-header');
+  if (!header) {
+    return;
+  }
+
+  if (!header.querySelector('.page-kicker-row')) {
+    const kickerRow = document.createElement('div');
+    kickerRow.className = 'page-kicker-row';
+    kickerRow.innerHTML = `
+      <span class="page-kicker">${ROLES[currentUser.role].label}</span>
+      <span class="page-kicker">${(NAV_ITEMS[page]?.label || page || 'Dashboard').replace(/_/g, ' ')}</span>`;
+    header.insertBefore(kickerRow, header.firstChild);
+  }
+
+  const chips = getPageTelemetry(page);
+  if (chips.length > 0) {
+    let telemetry = header.querySelector('.page-telemetry');
+    if (!telemetry) {
+      telemetry = document.createElement('div');
+      telemetry.className = 'page-telemetry';
+      header.appendChild(telemetry);
+    }
+
+    telemetry.innerHTML = chips
+      .map(chip => `<span class="telemetry-chip"><strong>${chip.value}</strong><em>${chip.label}</em></span>`)
+      .join('');
+  }
+}
+
+function animateRenderedSections() {
+  const container = document.getElementById('main-content');
+  if (!container) {
+    return;
+  }
+
+  const targets = Array.from(container.querySelectorAll(
+    '.page-header, .stat-card, .chart-card, .card, .approval-card, .fin-box, .inv-row, .progress-row, .tl-item, .alert-item'
+  ));
+
+  targets.forEach((element, index) => {
+    if (element.dataset.motionBound === 'true') {
+      return;
+    }
+
+    element.dataset.motionBound = 'true';
+    element.style.setProperty('--enter-delay', `${Math.min(index, 14) * 60}ms`);
+    element.classList.add('reveal-ready');
+  });
+
+  requestAnimationFrame(() => {
+    targets.forEach(element => element.classList.add('reveal-in'));
+  });
+}
+
+function initializeAmbientMotion() {
+  if (document.body.dataset.motionInitialized === 'true') {
+    return;
+  }
+
+  document.body.dataset.motionInitialized = 'true';
+
+  window.addEventListener('pointermove', event => {
+    document.documentElement.style.setProperty('--cursor-x', `${event.clientX}px`);
+    document.documentElement.style.setProperty('--cursor-y', `${event.clientY}px`);
+  });
+}
+
+function handleTiltMove(event) {
+  const rect = this.getBoundingClientRect();
+  const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
+  const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
+
+  this.style.setProperty('--tilt-rotate-x', `${(-offsetY * 6).toFixed(2)}deg`);
+  this.style.setProperty('--tilt-rotate-y', `${(offsetX * 8).toFixed(2)}deg`);
+  this.style.setProperty('--tilt-lift', '-4px');
+  this.style.setProperty('--tilt-shine-x', `${((offsetX + 0.5) * 100).toFixed(1)}%`);
+  this.style.setProperty('--tilt-shine-y', `${((offsetY + 0.5) * 100).toFixed(1)}%`);
+  this.style.setProperty('--tilt-shine-opacity', '.95');
+}
+
+function resetTilt() {
+  this.style.removeProperty('--tilt-rotate-x');
+  this.style.removeProperty('--tilt-rotate-y');
+  this.style.removeProperty('--tilt-lift');
+  this.style.removeProperty('--tilt-shine-x');
+  this.style.removeProperty('--tilt-shine-y');
+  this.style.removeProperty('--tilt-shine-opacity');
+}
+
+function bindInteractiveMotion() {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return;
+  }
+
+  const surfaces = document.querySelectorAll('#main-content .stat-card, #main-content .chart-card, #main-content .card, #main-content .approval-card, #main-content .fin-box');
+
+  surfaces.forEach(surface => {
+    if (surface.dataset.tiltBound === 'true') {
+      return;
+    }
+
+    surface.dataset.tiltBound = 'true';
+    surface.classList.add('tilt-surface');
+    surface.addEventListener('pointermove', handleTiltMove);
+    surface.addEventListener('pointerleave', resetTilt);
+    surface.addEventListener('pointercancel', resetTilt);
+  });
+}
+
+function enhancePageView(page) {
+  enhancePageHeader(page);
+  animateRenderedSections();
+  bindInteractiveMotion();
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+  const role = currentUser.role;
+  if (role === 'admin')     return renderAdminDashboard();
+  if (role === 'operator')  return renderOperatorDashboard();
+  if (role === 'field')     return renderFieldDashboard();
+  if (role === 'warehouse') return renderWarehouseDashboard();
+  if (role === 'finance')   return renderFinanceDashboard();
+  return renderAdminDashboard();
+}
+
+function renderAdminDashboard() {
+  const active = DB.disasterEvents.filter(e=>e.status==='Active').length;
+  const pending = DB.approvals.filter(a=>a.status==='Pending').length;
+  const criticalInv = DB.inventory.filter(i=>{
+    const r = DB.resources.find(r=>r.id===i.resource);
+    return r && i.available < r.threshold;
+  }).length;
+  return `
+  <div class="page-header">
+    <div class="page-title">COMMAND CENTER</div>
+    <div class="page-sub">Administrator Overview — Real-time System Status</div>
+  </div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">Active Events</div><div class="stat-value">${active}</div><div class="stat-change down">▲ 2 since yesterday</div><div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></div></div>
+    <div class="stat-card"><div class="stat-label">Open Reports</div><div class="stat-value">${DB.emergencyReports.filter(r=>r.status!=='Resolved').length}</div><div class="stat-change down">▲ 3 new today</div></div>
+    <div class="stat-card"><div class="stat-label">Teams Deployed</div><div class="stat-value">${DB.rescueTeams.filter(t=>t.status==='Busy'||t.status==='Assigned').length}</div><div class="stat-change">of ${DB.rescueTeams.length} total</div></div>
+    <div class="stat-card"><div class="stat-label">Pending Approvals</div><div class="stat-value" style="color:var(--yellow)">${pending}</div><div class="stat-change down">Requires action</div></div>
+    <div class="stat-card"><div class="stat-label">Patients Admitted</div><div class="stat-value">${DB.patients.length}</div><div class="stat-change">Across ${DB.hospitals.length} hospitals</div></div>
+    <div class="stat-card"><div class="stat-label">Low Stock Alerts</div><div class="stat-value" style="color:var(--red)">${criticalInv}</div><div class="stat-change down">Below threshold</div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card"><div class="chart-header">Disaster Events by Type</div><div class="chart-body"><canvas id="chart-events"></canvas></div></div>
+    <div class="chart-card"><div class="chart-header">Report Status Distribution</div><div class="chart-body"><canvas id="chart-reports"></canvas></div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><span class="card-title-dot"></span>Recent Alerts</div><button class="btn btn-secondary btn-sm" onclick="navigate('alerts')">View All</button></div>
+      <div style="padding:0">
+        ${DB.alerts.slice(0,4).map(a=>`
+        <div class="alert-item">
+          <span class="alert-dot ${a.type}"></span>
+          <div class="alert-content"><div class="alert-msg">${a.msg}</div><div class="alert-meta"><span>${a.time}</span></div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title"><span class="card-title-dot"></span>Pending Approvals</div><button class="btn btn-secondary btn-sm" onclick="navigate('approvals')">View All</button></div>
+      <div class="card-body" style="padding:12px">
+        ${DB.approvals.filter(a=>a.status==='Pending').map(a=>`
+        <div class="approval-card">
+          <div class="approval-info">
+            <div class="approval-title">${a.type}</div>
+            <div class="approval-meta"><span>Ref: ${a.ref}</span><span>By: ${a.requestedBy}</span></div>
+          </div>
+          <div class="approval-actions">
+            <button class="btn btn-success btn-sm" onclick="approveRequest('${a.id}',true)">✓</button>
+            <button class="btn btn-danger btn-sm" onclick="approveRequest('${a.id}',false)">✕</button>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderOperatorDashboard() {
+  return `
+  <div class="page-header"><div class="page-title">OPERATIONS CENTER</div><div class="page-sub">Emergency Operator — Active Incident Management</div></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">New Reports Today</div><div class="stat-value">5</div><div class="stat-change down">▲ Urgent attention</div></div>
+    <div class="stat-card"><div class="stat-label">Active Incidents</div><div class="stat-value">${DB.emergencyReports.filter(r=>r.status==='Active').length}</div><div class="stat-change down">Requires response</div></div>
+    <div class="stat-card"><div class="stat-label">Teams Available</div><div class="stat-value">${DB.rescueTeams.filter(t=>t.status==='Available').length}</div><div class="stat-change up">Ready to deploy</div></div>
+    <div class="stat-card"><div class="stat-label">Resolved Today</div><div class="stat-value">1</div><div class="stat-change up">▲ Good progress</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><span class="card-title-dot"></span>Active Emergency Reports</div><button class="btn btn-primary btn-sm" onclick="openNewReportModal()">+ New Report</button></div>
+    <div class="table-wrap"><table>
+      <tr><th>ID</th><th>Type</th><th>Location</th><th>Severity</th><th>Status</th><th>Time</th><th>Action</th></tr>
+      ${DB.emergencyReports.filter(r=>r.status!=='Resolved').map(r=>`
+      <tr>
+        <td class="td-mono">${r.id}</td>
+        <td>${r.type}</td>
+        <td>${r.location}</td>
+        <td><span class="sev-${r.severity}">●</span> Level ${r.severity}</td>
+        <td>${statusTag(r.status)}</td>
+        <td class="td-mono">${r.time.split(' ')[1]}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="assignTeamModal('${r.id}')">Assign Team</button></td>
+      </tr>`).join('')}
+    </table></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card"><div class="chart-header">Reports by Severity</div><div class="chart-body"><canvas id="chart-severity"></canvas></div></div>
+    <div class="chart-card"><div class="chart-header">Report Timeline (Today)</div><div class="chart-body"><canvas id="chart-timeline"></canvas></div></div>
+  </div>`;
+}
+
+function renderFieldDashboard() {
+  return `
+  <div class="page-header"><div class="page-title">FIELD OPERATIONS</div><div class="page-sub">Field Officer — Ground Situation Overview</div></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">My Assigned Reports</div><div class="stat-value">3</div></div>
+    <div class="stat-card"><div class="stat-label">Nearby Teams</div><div class="stat-value">${DB.rescueTeams.filter(t=>t.status==='Available').length}</div><div class="stat-change up">Available</div></div>
+    <div class="stat-card"><div class="stat-label">Patients Tracked</div><div class="stat-value">${DB.patients.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Critical Cases</div><div class="stat-value" style="color:var(--red)">${DB.patients.filter(p=>p.condition==='Critical').length}</div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><span class="card-title-dot"></span>Incident Map Overview</div></div>
+    <div class="map-placeholder">
+      <div class="map-grid"></div>
+      ${DB.emergencyReports.map((r,i)=>`<div class="map-dot" style="left:${20+i*15}%;top:${30+i*8}%;background:${r.severity>=4?'var(--red)':r.severity===3?'var(--orange)':'var(--yellow)'};color:${r.severity>=4?'var(--red)':r.severity===3?'var(--orange)':'var(--yellow)'};" title="${r.location}: ${r.type}"></div>`).join('')}
+      <div class="map-label" style="position:absolute;bottom:16px;left:16px;display:flex;gap:16px;background:rgba(0,0,0,.7);padding:8px 12px;border:1px solid var(--border)">
+        <span style="font-size:11px;color:var(--text2)"><span style="color:var(--red)">●</span> Critical</span>
+        <span style="font-size:11px;color:var(--text2)"><span style="color:var(--orange)">●</span> High</span>
+        <span style="font-size:11px;color:var(--text2)"><span style="color:var(--yellow)">●</span> Medium</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><span class="card-title-dot"></span>Recent Reports</div><button class="btn btn-primary btn-sm" onclick="openNewReportModal()">+ Submit Report</button></div>
+    <div class="table-wrap"><table>
+      <tr><th>ID</th><th>Type</th><th>Location</th><th>Severity</th><th>Status</th><th>Time</th></tr>
+      ${DB.emergencyReports.slice(0,4).map(r=>`
+      <tr>
+        <td class="td-mono">${r.id}</td>
+        <td>${r.type}</td>
+        <td>${r.location}</td>
+        <td><span class="sev-${r.severity}">●</span> Level ${r.severity}</td>
+        <td>${statusTag(r.status)}</td>
+        <td class="td-mono">${r.time}</td>
+      </tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+
+function renderWarehouseDashboard() {
+  const lowStock = DB.inventory.filter(i=>{
+    const r = DB.resources.find(r=>r.id===i.resource);
+    return r && i.available < r.threshold;
+  });
+  return `
+  <div class="page-header"><div class="page-title">WAREHOUSE OPS</div><div class="page-sub">Warehouse Manager — Inventory & Resource Tracking</div></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">Total Warehouses</div><div class="stat-value">${DB.warehouses.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Resource Types</div><div class="stat-value">${DB.resources.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Low Stock Alerts</div><div class="stat-value" style="color:var(--red)">${lowStock.length}</div><div class="stat-change down">Needs restock</div></div>
+    <div class="stat-card"><div class="stat-label">Pending Alloc.</div><div class="stat-value">${DB.allocations.filter(a=>a.status==='Pending').length}</div></div>
+  </div>
+  ${lowStock.length > 0 ? `
+  <div style="background:var(--red-dim);border:1px solid var(--red);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span style="font-size:12px;color:#FF8077"><strong>${lowStock.length} resource(s)</strong> are below threshold level — immediate restock required</span>
+  </div>` : ''}
+  <div class="card">
+    <div class="card-header"><div class="card-title"><span class="card-title-dot"></span>Inventory Status</div><button class="btn btn-primary btn-sm" onclick="openAllocationModal()">Request Allocation</button></div>
+    <div class="card-body">
+      <div class="inv-gauge">
+        ${DB.inventory.map(i=>{
+          const r = DB.resources.find(r=>r.id===i.resource);
+          const w = DB.warehouses.find(w=>w.id===i.warehouse);
+          if(!r||!w) return '';
+          const pct = Math.min(100, Math.round(i.available / (i.available+i.dispatched+i.consumed) * 100));
+          const low = i.available < r.threshold;
+          const color = low ? 'var(--red)' : pct > 60 ? 'var(--green)' : 'var(--orange)';
+          return `<div class="inv-row">
+            <div class="inv-name">${r.name}</div>
+            <div style="font-size:10px;color:var(--text3);width:80px;flex-shrink:0">${w.name.split(' ')[0]}</div>
+            <div class="inv-bar"><div class="inv-fill" style="width:${pct}%;background:${color}"></div></div>
+            <div class="inv-qty">${i.available} ${r.unit}</div>
+            <div class="inv-status">${low ? '<span class="tag tag-red">LOW</span>' : '<span class="tag tag-green">OK</span>'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderFinanceDashboard() {
+  const totalDonations = DB.financials.filter(t=>t.type==='Donation').reduce((s,t)=>s+t.amount,0);
+  const totalExpenses = DB.financials.filter(t=>t.type!=='Donation').reduce((s,t)=>s+t.amount,0);
+  const net = totalDonations - totalExpenses;
+  return `
+  <div class="page-header"><div class="page-title">FINANCIAL HQ</div><div class="page-sub">Finance Officer — Budget & Transaction Management</div></div>
+  <div class="fin-summary">
+    <div class="fin-box"><div class="fin-box-label">Total Donations</div><div class="fin-box-value income">PKR ${(totalDonations/1000).toFixed(0)}K</div></div>
+    <div class="fin-box"><div class="fin-box-label">Total Expenses</div><div class="fin-box-value expense">PKR ${(totalExpenses/1000).toFixed(0)}K</div></div>
+    <div class="fin-box"><div class="fin-box-label">Net Balance</div><div class="fin-box-value net">PKR ${(net/1000).toFixed(0)}K</div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-card"><div class="chart-header">Transaction Breakdown</div><div class="chart-body"><canvas id="chart-fin-type"></canvas></div></div>
+    <div class="chart-card"><div class="chart-header">Budget per Event</div><div class="chart-body"><canvas id="chart-budget"></canvas></div></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><span class="card-title-dot"></span>Recent Transactions</div><button class="btn btn-primary btn-sm" onclick="openTransactionModal()">+ New Transaction</button></div>
+    <div class="table-wrap"><table>
+      <tr><th>ID</th><th>Type</th><th>Amount (PKR)</th><th>Description</th><th>By</th><th>Date</th></tr>
+      ${DB.financials.map(t=>`
+      <tr>
+        <td class="td-mono">${t.id}</td>
+        <td>${txnTag(t.type)}</td>
+        <td class="td-mono" style="color:${t.type==='Donation'?'var(--green)':'var(--red)'}">${t.type==='Donation'?'+':'-'}${t.amount.toLocaleString()}</td>
+        <td>${t.desc}</td>
+        <td style="color:var(--text2);font-size:11px">${t.by}</td>
+        <td class="td-mono">${t.date}</td>
+      </tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// PAGES
+// ═══════════════════════════════════════════════
+function renderReports() {
+  return `
+  <div class="page-header"><div class="page-title">EMERGENCY REPORTS</div><div class="page-sub">All incident reports from citizens, helplines & monitoring systems</div></div>
+  <div class="search-bar">
+    <input class="search-input" placeholder="Search by location, type or ID..." oninput="filterTable(this,'reports-table')">
+    <select class="field select" style="padding:9px 32px 9px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);outline:none;appearance:none" onchange="filterReports(this.value)">
+      <option value="">All Types</option>
+      <option>Flood</option><option>Earthquake</option><option>Urban Fire</option><option>Landslide</option>
+    </select>
+    <button class="btn btn-primary" onclick="openNewReportModal()">+ New Report</button>
+  </div>
+  <div class="card">
+    <div class="table-wrap"><table id="reports-table">
+      <tr><th>Report ID</th><th>Disaster Type</th><th>Location</th><th>Severity</th><th>Reported By</th><th>Status</th><th>Time</th><th>Actions</th></tr>
+      ${DB.emergencyReports.map(r=>`
+      <tr>
+        <td class="td-mono">${r.id}</td>
+        <td><span style="display:flex;align-items:center;gap:6px">${disasterIcon(r.type)} ${r.type}</span></td>
+        <td>${r.location}</td>
+        <td><span class="sev-${r.severity}">■</span> Level ${r.severity}/5</td>
+        <td style="color:var(--text2);font-size:11px">${r.reportedBy}</td>
+        <td>${statusTag(r.status)}</td>
+        <td class="td-mono">${r.time}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-secondary btn-sm" onclick="viewReport('${r.id}')">View</button>
+          <button class="btn btn-danger btn-sm" onclick="updateReportStatus('${r.id}','Resolved')">Resolve</button>
+        </td>
+      </tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+
+function renderEvents() {
+  return `
+  <div class="page-header"><div class="page-title">DISASTER EVENTS</div><div class="page-sub">Active and historical disaster event management</div></div>
+  <div class="search-bar">
+    <input class="search-input" placeholder="Search events...">
+    <button class="btn btn-primary" onclick="openNewEventModal()">+ New Event</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+    ${DB.disasterEvents.map(e=>`
+    <div class="card" style="margin-bottom:0;cursor:pointer" onclick="viewEvent('${e.id}')">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">${e.name}</div>
+          <div style="font-size:11px;color:var(--text2)">${e.region} • ${e.type}</div>
+        </div>
+        ${statusTag(e.status)}
+      </div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Severity</div><div style="font-size:13px;font-weight:600;color:${e.severity==='Critical'?'var(--red)':e.severity==='High'?'var(--orange)':'var(--yellow)'}">${e.severity}</div></div>
+          <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Budget</div><div style="font-size:13px;font-weight:600;color:var(--text)">PKR ${(e.budget/1000).toFixed(0)}K</div></div>
+          <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Started</div><div style="font-size:11px;color:var(--text2)">${e.start}</div></div>
+          <div><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">Reports</div><div style="font-size:13px;font-weight:600;color:var(--text)">${DB.emergencyReports.filter(r=>r.id).length}</div></div>
+        </div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderTeams() {
+  return `
+  <div class="page-header"><div class="page-title">RESCUE TEAMS</div><div class="page-sub">Team management, assignments and status tracking</div></div>
+  <div class="stat-grid" style="grid-template-columns:repeat(4,1fr)">
+    ${['Available','Assigned','Busy','Completed'].map(s=>{
+      const count = DB.rescueTeams.filter(t=>t.status===s).length;
+      const colors = {Available:'var(--green)',Assigned:'var(--yellow)',Busy:'var(--red)',Completed:'var(--blue)'};
+      return `<div class="stat-card" style="--accent:${colors[s]}"><div class="stat-label">${s}</div><div class="stat-value">${count}</div></div>`;
+    }).join('')}
+  </div>
+  <div class="search-bar">
+    <input class="search-input" placeholder="Search teams..." oninput="filterTable(this,'teams-table')">
+    <button class="btn btn-primary" onclick="openNewTeamModal()">+ Add Team</button>
+  </div>
+  <div class="card">
+    <div class="table-wrap"><table id="teams-table">
+      <tr><th>Team ID</th><th>Name</th><th>Type</th><th>Location</th><th>Capacity</th><th>Status</th><th>Actions</th></tr>
+      ${DB.rescueTeams.map(t=>`
+      <tr>
+        <td class="td-mono">${t.id}</td>
+        <td style="font-weight:500">${t.name}</td>
+        <td>${teamTypeTag(t.type)}</td>
+        <td style="color:var(--text2)">${t.location}</td>
+        <td class="td-mono">${t.capacity}</td>
+        <td>${teamStatusTag(t.status)}</td>
+        <td><button class="btn btn-secondary btn-sm" onclick="deployTeam('${t.id}')">Deploy</button></td>
+      </tr>`).join('')}
+    </table></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><span class="card-title-dot"></span>Active Assignments</div></div>
+    <div class="table-wrap"><table>
+      <tr><th>Assignment ID</th><th>Team</th><th>Event</th><th>Assigned At</th><th>Status</th></tr>
+      ${DB.teamAssignments.map(a=>`
+      <tr>
+        <td class="td-mono">${a.id}</td>
+        <td>${a.team}</td>
+        <td>${a.event}</td>
+        <td class="td-mono">${a.assignedAt}</td>
+        <td>${statusTag(a.status)}</td>
+      </tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+
+function renderResources() {
+  return `
+  <div class="page-header"><div class="page-title">RESOURCE MANAGEMENT</div><div class="page-sub">Warehouse inventory, allocations and dispatch tracking</div></div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'res-inventory')">Inventory</div>
+    <div class="tab" onclick="switchTab(this,'res-allocations')">Allocations</div>
+    <div class="tab" onclick="switchTab(this,'res-warehouses')">Warehouses</div>
+  </div>
+  <div id="res-inventory">
+    <div class="search-bar"><input class="search-input" placeholder="Search resources..."><button class="btn btn-primary" onclick="openAllocationModal()">Request Allocation</button></div>
+    <div class="card"><div class="table-wrap"><table id="inventory-table">
+      <tr><th>Resource</th><th>Type</th><th>Warehouse</th><th>Available</th><th>Dispatched</th><th>Consumed</th><th>Threshold</th><th>Status</th></tr>
+      ${DB.inventory.map(i=>{
+        const r = DB.resources.find(r=>r.id===i.resource);
+        const w = DB.warehouses.find(w=>w.id===i.warehouse);
+        if(!r||!w) return '';
+        const low = i.available < r.threshold;
+        return `<tr>
+          <td style="font-weight:500">${r.name}</td>
+          <td><span class="tag tag-blue">${r.type}</span></td>
+          <td style="color:var(--text2)">${w.name}</td>
+          <td class="td-mono" style="color:${low?'var(--red)':'var(--green)'}">${i.available} ${r.unit}</td>
+          <td class="td-mono">${i.dispatched}</td>
+          <td class="td-mono">${i.consumed}</td>
+          <td class="td-mono">${r.threshold}</td>
+          <td>${low?'<span class="tag tag-red">LOW STOCK</span>':'<span class="tag tag-green">ADEQUATE</span>'}</td>
+        </tr>`;
+      }).join('')}
+    </table></div></div>
+  </div>
+  <div id="res-allocations" class="hidden">
+    <div class="card"><div class="table-wrap"><table>
+      <tr><th>ID</th><th>Resource</th><th>Warehouse</th><th>Event</th><th>Req. Qty</th><th>App. Qty</th><th>Status</th><th>Date</th></tr>
+      ${DB.allocations.map(a=>`<tr>
+        <td class="td-mono">${a.id}</td>
+        <td>${a.resource}</td>
+        <td>${a.warehouse}</td>
+        <td>${a.event}</td>
+        <td class="td-mono">${a.reqQty}</td>
+        <td class="td-mono">${a.appQty ?? '—'}</td>
+        <td>${statusTag(a.status)}</td>
+        <td class="td-mono">${a.date}</td>
+      </tr>`).join('')}
+    </table></div></div>
+  </div>
+  <div id="res-warehouses" class="hidden">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+      ${DB.warehouses.map(w=>{
+        const items = DB.inventory.filter(i=>i.warehouse===w.id);
+        const totalStock = items.reduce((s,i)=>s+i.available,0);
+        const pct = Math.min(100,Math.round(totalStock/w.capacity*100));
+        return `<div class="card" style="margin-bottom:0">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+            <div style="font-size:14px;font-weight:600;color:var(--text)">${w.name}</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">${w.location} • Cap: ${w.capacity.toLocaleString()}</div>
+          </div>
+          <div class="card-body">
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;color:var(--text2)"><span>Utilization</span><span>${pct}%</span></div>
+              <div style="height:6px;background:var(--bg4)"><div style="height:100%;width:${pct}%;background:${pct>80?'var(--red)':pct>60?'var(--orange)':'var(--green)'}"></div></div>
+            </div>
+            <div style="font-size:11px;color:var(--text2)">${items.length} resource types tracked</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function renderHospitals() {
+  return `
+  <div class="page-header"><div class="page-title">HOSPITAL COORDINATION</div><div class="page-sub">Real-time bed availability, patient assignment and load balancing</div></div>
+  <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card"><div class="stat-label">Total Beds</div><div class="stat-value">${DB.hospitals.reduce((s,h)=>s+h.totalBeds,0)}</div></div>
+    <div class="stat-card"><div class="stat-label">Available Beds</div><div class="stat-value" style="color:var(--green)">${DB.hospitals.reduce((s,h)=>s+h.availableBeds,0)}</div></div>
+    <div class="stat-card"><div class="stat-label">Critical Cases</div><div class="stat-value" style="color:var(--red)">${DB.hospitals.reduce((s,h)=>s+h.criticalCases,0)}</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:16px">
+    ${DB.hospitals.map(h=>{
+      const occ = Math.round((h.totalBeds-h.availableBeds)/h.totalBeds*100);
+      const color = occ > 85 ? 'var(--red)' : occ > 60 ? 'var(--orange)' : 'var(--green)';
+      return `<div class="card" style="margin-bottom:0">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+          <div style="font-size:14px;font-weight:600;color:var(--text)">${h.name}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">${h.location}</div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+            <div style="text-align:center;padding:8px;background:var(--bg3)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px">${h.totalBeds}</div><div style="font-size:9px;color:var(--text2);text-transform:uppercase">Total</div></div>
+            <div style="text-align:center;padding:8px;background:var(--bg3)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green)">${h.availableBeds}</div><div style="font-size:9px;color:var(--text2);text-transform:uppercase">Free</div></div>
+            <div style="text-align:center;padding:8px;background:var(--bg3)"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--red)">${h.criticalCases}</div><div style="font-size:9px;color:var(--text2);text-transform:uppercase">Critical</div></div>
+          </div>
+          <div style="margin-bottom:8px;font-size:10px;color:var(--text2);display:flex;justify-content:space-between"><span>Occupancy</span><span style="color:${color}">${occ}%</span></div>
+          <div style="height:6px;background:var(--bg4)"><div style="height:100%;width:${occ}%;background:${color}"></div></div>
+          <button class="btn btn-secondary btn-sm" style="margin-top:12px;width:100%" onclick="assignPatient('${h.id}')">Assign Patient</button>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><span class="card-title-dot"></span>Admitted Patients</div><button class="btn btn-primary btn-sm" onclick="openPatientModal()">+ Admit Patient</button></div>
+    <div class="table-wrap"><table>
+      <tr><th>Patient ID</th><th>Name</th><th>Age/Gender</th><th>Condition</th><th>Hospital</th><th>Admission</th><th>Event</th></tr>
+      ${DB.patients.map(p=>{
+        const h = DB.hospitals.find(h=>h.id===p.hospital);
+        return `<tr>
+          <td class="td-mono">${p.id}</td>
+          <td style="font-weight:500">${p.name}</td>
+          <td style="color:var(--text2)">${p.age} / ${p.gender}</td>
+          <td>${conditionTag(p.condition)}</td>
+          <td style="font-size:11px">${h?.name||p.hospital}</td>
+          <td class="td-mono">${p.admission}</td>
+          <td class="td-mono" style="color:var(--text2)">${p.event}</td>
+        </tr>`;
+      }).join('')}
+    </table></div>
+  </div>`;
+}
+
+function renderFinancials() {
+  const totalDonations = DB.financials.filter(t=>t.type==='Donation').reduce((s,t)=>s+t.amount,0);
+  const totalExpenses = DB.financials.filter(t=>t.type==='Expense').reduce((s,t)=>s+t.amount,0);
+  const totalProc = DB.financials.filter(t=>t.type==='Procurement').reduce((s,t)=>s+t.amount,0);
+  return `
+  <div class="page-header"><div class="page-title">FINANCIAL MANAGEMENT</div><div class="page-sub">Donations, expenses, procurement and audit trails</div></div>
+  <div class="fin-summary">
+    <div class="fin-box"><div class="fin-box-label">Total Donations</div><div class="fin-box-value income">PKR ${(totalDonations/1000).toFixed(0)}K</div></div>
+    <div class="fin-box"><div class="fin-box-label">Total Expenses</div><div class="fin-box-value expense">PKR ${(totalExpenses/1000).toFixed(0)}K</div></div>
+    <div class="fin-box"><div class="fin-box-label">Procurement</div><div class="fin-box-value" style="color:var(--orange)">PKR ${(totalProc/1000).toFixed(0)}K</div></div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'fin-txn')">Transactions</div>
+    <div class="tab" onclick="switchTab(this,'fin-donors')">Donors</div>
+  </div>
+  <div id="fin-txn">
+    <div class="search-bar"><input class="search-input" placeholder="Search transactions..."><button class="btn btn-primary" onclick="openTransactionModal()">+ Add Transaction</button></div>
+    <div class="card"><div class="table-wrap"><table>
+      <tr><th>Txn ID</th><th>Type</th><th>Amount (PKR)</th><th>Reference</th><th>Description</th><th>By</th><th>Date</th></tr>
+      ${DB.financials.map(t=>`<tr>
+        <td class="td-mono">${t.id}</td>
+        <td>${txnTag(t.type)}</td>
+        <td class="td-mono" style="color:${t.type==='Donation'?'var(--green)':'var(--red)'}">
+          ${t.type==='Donation'?'+':'-'}${t.amount.toLocaleString()}
+        </td>
+        <td class="td-mono">${t.ref}</td>
+        <td>${t.desc}</td>
+        <td style="color:var(--text2);font-size:11px">${t.by}</td>
+        <td class="td-mono">${t.date}</td>
+      </tr>`).join('')}
+    </table></div></div>
+  </div>
+  <div id="fin-donors" class="hidden">
+    <div class="search-bar"><input class="search-input" placeholder="Search donors..."><button class="btn btn-primary" onclick="openDonorModal()">+ Add Donor</button></div>
+    <div class="card"><div class="table-wrap"><table>
+      <tr><th>Donor ID</th><th>Name</th><th>Type</th><th>Contact</th><th>Total Donated (PKR)</th></tr>
+      ${DB.donors.map(d=>`<tr>
+        <td class="td-mono">${d.id}</td>
+        <td style="font-weight:500">${d.name}</td>
+        <td><span class="tag ${d.type==='Individual'?'tag-blue':'tag-purple'}">${d.type}</span></td>
+        <td style="color:var(--text2);font-size:11px">${d.contact}</td>
+        <td class="td-mono" style="color:var(--green)">${d.total.toLocaleString()}</td>
+      </tr>`).join('')}
+    </table></div></div>
+  </div>`;
+}
+
+function renderApprovals() {
+  return `
+  <div class="page-header"><div class="page-title">APPROVAL WORKFLOW</div><div class="page-sub">Multi-step approval management with complete history</div></div>
+  <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" style="color:var(--yellow)">${DB.approvals.filter(a=>a.status==='Pending').length}</div></div>
+    <div class="stat-card"><div class="stat-label">Approved</div><div class="stat-value" style="color:var(--green)">${DB.approvals.filter(a=>a.status==='Approved').length}</div></div>
+    <div class="stat-card"><div class="stat-label">Rejected</div><div class="stat-value" style="color:var(--red)">${DB.approvals.filter(a=>a.status==='Rejected').length}</div></div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this,'apr-pending')">Pending <span style="background:var(--red);color:white;padding:1px 6px;font-size:10px;margin-left:4px">${DB.approvals.filter(a=>a.status==='Pending').length}</span></div>
+    <div class="tab" onclick="switchTab(this,'apr-history')">History</div>
+  </div>
+  <div id="apr-pending">
+    ${DB.approvals.filter(a=>a.status==='Pending').map(a=>`
+    <div class="approval-card">
+      <div style="width:40px;height:40px;background:var(--bg4);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      </div>
+      <div class="approval-info">
+        <div class="approval-title">${a.type}</div>
+        <div class="approval-meta">
+          <span>Ref: <span style="color:var(--text)">${a.ref}</span></span>
+          <span>Requested by: <span style="color:var(--text)">${a.requestedBy}</span></span>
+          <span>At: ${a.requestedAt}</span>
+        </div>
+      </div>
+      <div class="approval-actions">
+        <button class="btn btn-success" onclick="approveRequest('${a.id}',true)">✓ Approve</button>
+        <button class="btn btn-danger" onclick="approveRequest('${a.id}',false)">✕ Reject</button>
+      </div>
+    </div>`).join('')}
+    ${DB.approvals.filter(a=>a.status==='Pending').length===0?'<div class="empty"><p>No pending approvals</p></div>':''}
+  </div>
+  <div id="apr-history" class="hidden">
+    <div class="card"><div class="table-wrap"><table>
+      <tr><th>ID</th><th>Type</th><th>Reference</th><th>Requested By</th><th>Status</th><th>Comments</th><th>Date</th></tr>
+      ${DB.approvals.map(a=>`<tr>
+        <td class="td-mono">${a.id}</td>
+        <td>${a.type}</td>
+        <td class="td-mono">${a.ref}</td>
+        <td style="color:var(--text2)">${a.requestedBy}</td>
+        <td>${statusTag(a.status)}</td>
+        <td style="color:var(--text2);font-size:11px">${a.comments||'—'}</td>
+        <td class="td-mono">${a.requestedAt}</td>
+      </tr>`).join('')}
+    </table></div></div>
+  </div>`;
+}
+
+function renderAudit() {
+  return `
+  <div class="page-header"><div class="page-title">AUDIT LOG</div><div class="page-sub">Complete user action trail — timestamped and tamper-evident</div></div>
+  <div class="search-bar">
+    <input class="search-input" placeholder="Search logs by user, action or table...">
+    <select style="padding:9px 32px 9px 12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);outline:none;appearance:none">
+      <option>All Actions</option><option>INSERT</option><option>UPDATE</option><option>DELETE</option><option>LOGIN</option><option>APPROVE</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="table-wrap"><table>
+      <tr><th>Log ID</th><th>User</th><th>Action</th><th>Table</th><th>Old Value</th><th>New Value</th><th>Timestamp</th></tr>
+      ${DB.auditLogs.map(l=>`<tr>
+        <td class="td-mono">${l.id}</td>
+        <td style="color:var(--text2)">${l.user}</td>
+        <td>${auditActionTag(l.action)}</td>
+        <td class="td-mono">${l.table}</td>
+        <td class="td-mono" style="color:var(--text3)">${l.old??'NULL'}</td>
+        <td class="td-mono" style="color:var(--text2)">${l.new??'NULL'}</td>
+        <td class="td-mono">${l.time}</td>
+      </tr>`).join('')}
+    </table></div>
+  </div>`;
+}
+
+function renderAlerts() {
+  return `
+  <div class="page-header"><div class="page-title">SYSTEM ALERTS</div><div class="page-sub">Real-time alerts from triggers, thresholds and system events</div></div>
+  <div class="card" style="padding:0">
+    ${DB.alerts.map(a=>`
+    <div class="alert-item" style="${a.read?'opacity:.6':''}">
+      <span class="alert-dot ${a.type}"></span>
+      <div class="alert-content">
+        <div class="alert-msg" style="font-size:13px">${a.msg}</div>
+        <div class="alert-meta"><span>${a.time}</span><span>${a.read?'Read':'Unread'}</span></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <span class="tag ${a.type==='critical'?'tag-red':a.type==='warning'?'tag-orange':'tag-blue'}">${a.type}</span>
+        ${!a.read?`<button class="btn btn-secondary btn-sm" onclick="markAlertRead('${a.id}')">Mark Read</button>`:''}
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════
+const chartDefaults = {
+  plugins:{legend:{labels:{color:'#7A8FA8',font:{family:'DM Sans',size:11},boxWidth:10}}},
+  scales:{x:{grid:{color:'#1A2030'},ticks:{color:'#7A8FA8',font:{size:10}}},y:{grid:{color:'#1A2030'},ticks:{color:'#7A8FA8',font:{size:10}}}},
+};
+
+function initCharts(page) {
+  if (page === 'dashboard') {
+    const role = currentUser.role;
+    if (role === 'admin') {
+      mkDonut('chart-events', ['Flood','Earthquake','Urban Fire'],
+        [DB.disasterEvents.filter(e=>e.type==='Flood').length,
+         DB.disasterEvents.filter(e=>e.type==='Earthquake').length,
+         DB.disasterEvents.filter(e=>e.type==='Urban Fire').length],
+        ['#E8291C','#F57C2B','#F5C518']);
+      mkDonut('chart-reports',
+        ['Active','Assigned','Resolved','Pending'],
+        ['Active','Assigned','Resolved','Pending'].map(s=>DB.emergencyReports.filter(r=>r.status===s).length),
+        ['#E8291C','#F5C518','#1CB85A','#1C7BE8']);
+    } else if (role === 'operator') {
+      mkBar('chart-severity',
+        ['Lv 1','Lv 2','Lv 3','Lv 4','Lv 5'],
+        [1,2,3,4,5].map(s=>DB.emergencyReports.filter(r=>r.severity===s).length),
+        '#E8291C');
+      mkLine('chart-timeline',['08:00','09:00','10:00','11:00','12:00'],[1,1,1,1,1],'#F57C2B');
+    } else if (role === 'finance') {
+      mkDonut('chart-fin-type',['Donations','Expenses','Procurement'],
+        [DB.financials.filter(t=>t.type==='Donation').reduce((s,t)=>s+t.amount,0),
+         DB.financials.filter(t=>t.type==='Expense').reduce((s,t)=>s+t.amount,0),
+         DB.financials.filter(t=>t.type==='Procurement').reduce((s,t)=>s+t.amount,0)],
+        ['#1CB85A','#E8291C','#F57C2B']);
+      mkBar('chart-budget',
+        DB.disasterEvents.map(e=>e.name.split(' ').slice(0,2).join(' ')),
+        DB.disasterEvents.map(e=>e.budget/1000),
+        '#1C7BE8');
+    }
+  }
+}
+
+function mkDonut(id, labels, data, colors) {
+  const el = document.getElementById(id); if(!el) return;
+  chartInstances[id] = new Chart(el, {
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,hoverOffset:4}]},
+    options:{...chartDefaults,cutout:'65%',scales:{},maintainAspectRatio:false}
+  });
+}
+function mkBar(id, labels, data, color) {
+  const el = document.getElementById(id); if(!el) return;
+  chartInstances[id] = new Chart(el, {
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:color+'44',borderColor:color,borderWidth:1}]},
+    options:{...chartDefaults,plugins:{legend:{display:false}},maintainAspectRatio:false}
+  });
+}
+function mkLine(id, labels, data, color) {
+  const el = document.getElementById(id); if(!el) return;
+  chartInstances[id] = new Chart(el, {
+    type:'line',
+    data:{labels,datasets:[{data,borderColor:color,backgroundColor:color+'22',fill:true,tension:.4,pointRadius:3}]},
+    options:{...chartDefaults,plugins:{legend:{display:false}},maintainAspectRatio:false}
+  });
+}
+
+// ═══════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════
+function openNewReportModal() {
+  document.getElementById('gmodal-title').textContent = 'NEW EMERGENCY REPORT';
+  document.getElementById('gmodal-body').innerHTML = `
+  <div class="form-grid">
+    <div class="field"><label>Disaster Type</label><select><option>Flood</option><option>Earthquake</option><option>Urban Fire</option><option>Landslide</option></select></div>
+    <div class="field"><label>Severity Level (1-5)</label><select><option>1 - Low</option><option>2 - Moderate</option><option>3 - High</option><option>4 - Critical</option><option>5 - Catastrophic</option></select></div>
+    <div class="field form-full"><label>Location</label><input type="text" placeholder="Enter incident location"></div>
+    <div class="field"><label>Latitude</label><input type="number" placeholder="34.0151" step="0.0001"></div>
+    <div class="field"><label>Longitude</label><input type="number" placeholder="71.5249" step="0.0001"></div>
+    <div class="field"><label>Reported By</label><select><option>Mobile App</option><option>Helpline</option><option>Field Officer</option><option>Citizen</option></select></div>
+    <div class="field"><label>Address Details</label><input type="text" placeholder="Street/Area description"></div>
+    <div class="field form-full"><label>Description</label><textarea placeholder="Detailed description of the incident..."></textarea></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal('generic-modal')">Cancel</button><button class="btn btn-primary" onclick="submitReport()">Submit Report</button></div>`;
+  document.getElementById('generic-modal').classList.add('open');
+}
+
+function openNewEventModal() {
+  document.getElementById('gmodal-title').textContent = 'CREATE DISASTER EVENT';
+  document.getElementById('gmodal-body').innerHTML = `
+  <div class="form-grid">
+    <div class="field form-full"><label>Event Name</label><input type="text" placeholder="e.g. Peshawar Earthquake 2025"></div>
+    <div class="field"><label>Disaster Type</label><select><option>Flood</option><option>Earthquake</option><option>Urban Fire</option><option>Landslide</option></select></div>
+    <div class="field"><label>Severity</label><select><option>Low</option><option>Medium</option><option>High</option><option>Critical</option></select></div>
+    <div class="field"><label>Affected Region</label><input type="text" placeholder="KPK North"></div>
+    <div class="field"><label>Allocated Budget (PKR)</label><input type="number" placeholder="1000000"></div>
+    <div class="field"><label>Start Date</label><input type="date"></div>
+    <div class="field"><label>End Date</label><input type="date"></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal('generic-modal')">Cancel</button><button class="btn btn-primary" onclick="submitEvent()">Create Event</button></div>`;
+  document.getElementById('generic-modal').classList.add('open');
+}
+
+function openNewTeamModal() {
+  document.getElementById('gmodal-title').textContent = 'ADD RESCUE TEAM';
+  document.getElementById('gmodal-body').innerHTML = `
+  <div class="form-grid">
+    <div class="field form-full"><label>Team Name</label><input type="text" placeholder="e.g. Foxtrot Medical Unit"></div>
+    <div class="field"><label>Team Type</label><select><option>Medical</option><option>Fire</option><option>Rescue</option></select></div>
+    <div class="field"><label>Capacity</label><input type="number" placeholder="10"></div>
+    <div class="field"><label>Current Location</label><input type="text" placeholder="Peshawar HQ"></div>
+    <div class="field"><label>Latitude</label><input type="number" placeholder="34.0151"></div>
+    <div class="field"><label>Longitude</label><input type="number" placeholder="71.5249"></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal('generic-modal')">Cancel</button><button class="btn btn-primary" onclick="showToast('Team added successfully','success');closeModal('generic-modal')">Add Team</button></div>`;
+  document.getElementById('generic-modal').classList.add('open');
+}
+
+function openAllocationModal() {
+  document.getElementById('gmodal-title').textContent = 'REQUEST RESOURCE ALLOCATION';
+  document.getElementById('gmodal-body').innerHTML = `
+  <div class="form-grid">
+    <div class="field"><label>Resource</label><select>${DB.resources.map(r=>`<option value="${r.id}">${r.name}</option>`).join('')}</select></div>
+    <div class="field"><label>Warehouse</label><select>${DB.warehouses.map(w=>`<option value="${w.id}">${w.name}</option>`).join('')}</select></div>
+    <div class="field"><label>Disaster Event</label><select>${DB.disasterEvents.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+    <div class="field"><label>Requested Quantity</label><input type="number" placeholder="100"></div>
+    <div class="field form-full"><label>Purpose</label><textarea placeholder="Reason for allocation request..."></textarea></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal('generic-modal')">Cancel</button><button class="btn btn-primary" onclick="showToast('Allocation request submitted — pending approval','warning');closeModal('generic-modal')">Submit Request</button></div>`;
+  document.getElementById('generic-modal').classList.add('open');
+}
+
+function openTransactionModal() {
+  document.getElementById('gmodal-title').textContent = 'NEW FINANCIAL TRANSACTION';
+  document.getElementById('gmodal-body').innerHTML = `
+  <div class="form-grid">
+    <div class="field"><label>Transaction Type</label><select><option>Donation</option><option>Expense</option><option>Procurement</option></select></div>
+    <div class="field"><label>Amount (PKR)</label><input type="number" placeholder="100000"></div>
+    <div class="field form-full"><label>Description</label><input type="text" placeholder="Brief description of transaction"></div>
+    <div class="field"><label>Reference Number</label><input type="text" placeholder="Auto-generated"></div>
+    <div class="field"><label>Related Event</label><select><option>General</option>${DB.disasterEvents.map(e=>`<option>${e.name}</option>`).join('')}</select></div>
+    <div class="field"><label>Date</label><input type="date"></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal('generic-modal')">Cancel</button><button class="btn btn-primary" onclick="showToast('Transaction recorded — audit log updated','success');closeModal('generic-modal')">Record Transaction</button></div>`;
+  document.getElementById('generic-modal').classList.add('open');
+}
+
+function openDonorModal() {
+  document.getElementById('gmodal-title').textContent = 'ADD DONOR';
+  document.getElementById('gmodal-body').innerHTML = `
+  <div class="form-grid">
+    <div class="field form-full"><label>Donor Name</label><input type="text" placeholder="Full name or organization"></div>
+    <div class="field"><label>Donor Type</label><select><option>Individual</option><option>Organization</option><option>NGO</option><option>Government</option></select></div>
+    <div class="field"><label>Contact Info</label><input type="text" placeholder="Email or phone"></div>
+    <div class="field"><label>Initial Donation (PKR)</label><input type="number" placeholder="0"></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal('generic-modal')">Cancel</button><button class="btn btn-primary" onclick="showToast('Donor added successfully','success');closeModal('generic-modal')">Add Donor</button></div>`;
+  document.getElementById('generic-modal').classList.add('open');
+}
+
+function openPatientModal() {
+  document.getElementById('gmodal-title').textContent = 'ADMIT PATIENT';
+  document.getElementById('gmodal-body').innerHTML = `
+  <div class="form-grid">
+    <div class="field form-full"><label>Patient Name</label><input type="text" placeholder="Full name"></div>
+    <div class="field"><label>Age</label><input type="number" placeholder="0"></div>
+    <div class="field"><label>Gender</label><select><option>Male</option><option>Female</option><option>Other</option></select></div>
+    <div class="field"><label>Condition</label><select><option>Stable</option><option>Serious</option><option>Critical</option></select></div>
+    <div class="field"><label>Assign Hospital</label><select>${DB.hospitals.map(h=>`<option value="${h.id}">${h.name} (${h.availableBeds} beds free)</option>`).join('')}</select></div>
+    <div class="field"><label>Related Event</label><select>${DB.disasterEvents.map(e=>`<option value="${e.id}">${e.name}</option>`).join('')}</select></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal('generic-modal')">Cancel</button><button class="btn btn-primary" onclick="showToast('Patient admitted — hospital records updated','success');closeModal('generic-modal')">Admit Patient</button></div>`;
+  document.getElementById('generic-modal').classList.add('open');
+}
+
+function assignTeamModal(reportId) {
+  const report = DB.emergencyReports.find(r=>r.id===reportId);
+  const available = DB.rescueTeams.filter(t=>t.status==='Available');
+  document.getElementById('gmodal-title').textContent = 'ASSIGN RESCUE TEAM';
+  document.getElementById('gmodal-body').innerHTML = `
+  <div style="background:var(--bg3);border:1px solid var(--border);padding:12px 16px;margin-bottom:20px">
+    <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Report: ${reportId}</div>
+    <div style="font-size:13px;font-weight:600">${report?.type} — ${report?.location}</div>
+    <div style="margin-top:4px">${statusTag(report?.status||'')}</div>
+  </div>
+  <div class="form-grid">
+    <div class="field form-full"><label>Select Team</label><select>${available.map(t=>`<option value="${t.id}">${t.name} (${t.type}) — ${t.location}</option>`).join('')}</select></div>
+    <div class="field form-full"><label>Deployment Notes</label><textarea placeholder="Special instructions..."></textarea></div>
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal('generic-modal')">Cancel</button><button class="btn btn-primary" onclick="showToast('Team assigned — status updated to Assigned','success');closeModal('generic-modal')">Deploy Team</button></div>`;
+  document.getElementById('generic-modal').classList.add('open');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showAlertPanel() {
+  const list = document.getElementById('alert-list');
+  list.innerHTML = DB.alerts.map(a=>`
+  <div class="alert-item" style="${a.read?'opacity:.5':''}">
+    <span class="alert-dot ${a.type}"></span>
+    <div class="alert-content">
+      <div class="alert-msg">${a.msg}</div>
+      <div class="alert-meta"><span>${a.time}</span></div>
+    </div>
+    ${!a.read?`<button class="btn btn-secondary btn-sm" onclick="markAlertRead('${a.id}')">✓</button>`:''}
+  </div>`).join('');
+  document.getElementById('alert-modal').classList.add('open');
+}
+
+// ═══════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════
+function approveRequest(id, approve) {
+  const req = DB.approvals.find(a=>a.id===id);
+  if (req) {
+    req.status = approve ? 'Approved' : 'Rejected';
+    req.comments = approve ? 'Approved by ' + currentUser.username : 'Rejected by ' + currentUser.username;
+    DB.auditLogs.unshift({id:'LOG-NEW',user:currentUser.username,action:approve?'APPROVE':'REJECT',table:'APPROVAL_REQUEST',old:'Pending',new:req.status,time:new Date().toLocaleString()});
+    showToast(approve ? '✓ Request approved and logged' : '✕ Request rejected and logged', approve ? 'success' : 'error');
+    buildSidebar();
+    navigate(currentPage);
+  }
+}
+
+function markAlertRead(id) {
+  const a = DB.alerts.find(a=>a.id===id);
+  if(a) a.read = true;
+  document.getElementById('alert-count').textContent = DB.alerts.filter(a=>!a.read).length;
+  buildSidebar();
+  showAlertPanel();
+  if(currentPage==='alerts') navigate('alerts');
+}
+
+function deployTeam(id) {
+  const t = DB.rescueTeams.find(t=>t.id===id);
+  if(t && t.status==='Available') {
+    showToast('Select an event to deploy '+t.name,'info');
+    assignTeamModal(DB.emergencyReports[0].id);
+  } else {
+    showToast('Team is not available for deployment','error');
+  }
+}
+
+function updateReportStatus(id, status) {
+  const r = DB.emergencyReports.find(r=>r.id===id);
+  if(r) { r.status = status; showToast('Report '+id+' marked as '+status,'success'); navigate(currentPage); }
+}
+
+function viewReport(id) {
+  const r = DB.emergencyReports.find(r=>r.id===id);
+  if(!r) return;
+  document.getElementById('gmodal-title').textContent = 'REPORT DETAILS — '+r.id;
+  document.getElementById('gmodal-body').innerHTML = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    ${[['Report ID',r.id],['Type',r.type],['Location',r.location],['Severity','Level '+r.severity+'/5'],['Status',r.status],['Reported By',r.reportedBy],['Report Time',r.time],['Coordinates',r.lat+', '+r.lng]].map(([k,v])=>`
+    <div style="background:var(--bg3);padding:12px;border:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">${k}</div>
+      <div style="font-size:13px;font-weight:500;color:var(--text)">${v}</div>
+    </div>`).join('')}
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal('generic-modal')">Close</button><button class="btn btn-primary" onclick="assignTeamModal('${r.id}');">Assign Team</button></div>`;
+  document.getElementById('generic-modal').classList.add('open');
+}
+
+function viewEvent(id) {
+  const e = DB.disasterEvents.find(e=>e.id===id);
+  if(!e) return;
+  const relReports = DB.emergencyReports.length;
+  document.getElementById('gmodal-title').textContent = e.name.toUpperCase();
+  document.getElementById('gmodal-body').innerHTML = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+    ${[['Event ID',e.id],['Type',e.type],['Region',e.region],['Severity',e.severity],['Status',e.status],['Budget','PKR '+e.budget.toLocaleString()],['Start Date',e.start]].map(([k,v])=>`
+    <div style="background:var(--bg3);padding:12px;border:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px">${k}</div>
+      <div style="font-size:13px;font-weight:500">${v}</div>
+    </div>`).join('')}
+  </div>
+  <div class="form-actions"><button class="btn btn-secondary" onclick="closeModal('generic-modal')">Close</button></div>`;
+  document.getElementById('generic-modal').classList.add('open');
+}
+
+function assignPatient(hospitalId) { openPatientModal(); }
+
+function submitReport() {
+  showToast('Emergency report submitted — operators notified','success');
+  DB.auditLogs.unshift({id:'LOG-RPT',user:currentUser.username,action:'INSERT',table:'EMERGENCY_REPORT',old:null,new:'RPT-NEW',time:new Date().toLocaleString()});
+  closeModal('generic-modal');
+}
+function submitEvent() {
+  showToast('Disaster event created successfully','success');
+  closeModal('generic-modal');
+}
+
+// ═══════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════
+function switchTab(el, targetId) {
+  const parent = el.closest('.tabs');
+  parent.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const section = el.closest('.main') || document.getElementById('main-content');
+  const allPanels = section.querySelectorAll('[id^="'+targetId.split('-')[0]+'-"]');
+  allPanels.forEach(p=>p.classList.add('hidden'));
+  const target = document.getElementById(targetId);
+  if(target) target.classList.remove('hidden');
+  enhancePageView(currentPage);
+}
+
+function filterTable(input, tableId) {
+  const val = input.value.toLowerCase();
+  const rows = document.querySelectorAll('#'+tableId+' tr:not(:first-child)');
+  rows.forEach(r => { r.style.display = r.textContent.toLowerCase().includes(val) ? '' : 'none'; });
+}
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type==='error'?'error':type==='warning'?'warning':'');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function statusTag(s) {
+  const map = {Active:'tag-red',Assigned:'tag-yellow',Resolved:'tag-green',Pending:'tag-gray',Busy:'tag-orange',Completed:'tag-blue',Approved:'tag-green',Rejected:'tag-red'};
+  return `<span class="tag ${map[s]||'tag-gray'}">${s}</span>`;
+}
+function teamStatusTag(s) { return statusTag(s); }
+function teamTypeTag(t) {
+  const map = {Medical:'tag-green',Fire:'tag-red',Rescue:'tag-orange'};
+  return `<span class="tag ${map[t]||'tag-gray'}">${t}</span>`;
+}
+function txnTag(t) {
+  const map = {Donation:'tag-green',Expense:'tag-red',Procurement:'tag-orange'};
+  return `<span class="tag ${map[t]||'tag-gray'}">${t}</span>`;
+}
+function conditionTag(c) {
+  const map = {Stable:'tag-green',Serious:'tag-orange',Critical:'tag-red'};
+  return `<span class="tag ${map[c]||'tag-gray'}">${c}</span>`;
+}
+function auditActionTag(a) {
+  const map = {INSERT:'tag-green',UPDATE:'tag-yellow',DELETE:'tag-red',LOGIN:'tag-blue',APPROVE:'tag-green',REJECT:'tag-red'};
+  return `<span class="tag ${map[a]||'tag-gray'}">${a}</span>`;
+}
+function disasterIcon(type) {
+  const icons = {Flood:'💧',Earthquake:'⚡',Fire:'🔥','Urban Fire':'🔥',Landslide:'⛰️'};
+  return icons[type]||'⚠️';
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); });
+});
+
+initializeAmbientMotion();
+</script>
+<script src="js/api.js"></script>
+</body>
+</html>

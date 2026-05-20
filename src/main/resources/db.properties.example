@@ -1,0 +1,14 @@
+# Optional local database configuration for SQL Server.
+# Rename this file to db.properties if you want the app to load it automatically.
+
+db.driver=com.microsoft.sqlserver.jdbc.SQLServerDriver
+db.host=localhost
+db.port=1433
+db.name=disaster_mis
+db.username=SA
+db.password=reallyStrongPwd123
+db.encrypt=true
+db.trustServerCertificate=true
+
+# You can also bypass the individual values above and provide a complete JDBC URL:
+# db.url=jdbc:sqlserver://localhost:1433;databaseName=disaster_mis;encrypt=true;trustServerCertificate=true

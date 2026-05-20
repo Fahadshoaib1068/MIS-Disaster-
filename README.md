@@ -15,6 +15,11 @@ The system integrates:
 
 ---
 
+### Team Members
+1. Fahad Shoaib
+2. Wania Bakhat
+3. Fahima Sohail
+
 ## Key Features
 
 ### Emergency Reporting
